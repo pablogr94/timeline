@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;700;800&display=swap');
 
+/* Prevent unwanted text highlighting when dragging/panning */
+* {
+    -webkit-user-select: none; /* Safari / Chrome */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE 10+ / Edge */
+    user-select: none;         /* Standard */
+}
+
 /* The Global Reset & Canvas Aesthetic */
 body, html {
     margin: 0;
