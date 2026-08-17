@@ -9,9 +9,14 @@ const horizontalOffsetStep = 45;   // Increased from 22 to fan out horizontally
 const minScreenGap = 160;
 
 // --- INTERACTION STATE ---
-let scale = 1;
-let translateX = -3000; 
+let scale = 1; // Starts full zoom out
+
+// Center on 1950 automatically on load
+const targetYear = 1950;
+const targetX = (targetYear - minYear) * pixelsPerYear;
+let translateX = (window.innerWidth / 2) - targetX; // Done! Centers 1950 right here
 let translateY = 0;
+
 let isDragging = false;
 let startX, startY;
 let loadedItems = []; 
@@ -388,3 +393,4 @@ viewport.addEventListener('wheel', (e) => {
 
 // --- KICK OFF APP ---
 loadData();
+updateTransform();
