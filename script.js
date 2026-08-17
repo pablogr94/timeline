@@ -9,12 +9,14 @@ const horizontalOffsetStep = 45;   // Increased from 22 to fan out horizontally
 const minScreenGap = 160;
 
 // --- INTERACTION STATE ---
-let scale = 1; // Starts full zoom out
+let scale = 0.1; // Lower number = more zoomed out! (Try 0.3 or 0.4)
 
 // Center on 1950 automatically on load
 const targetYear = 1950;
 const targetX = (targetYear - minYear) * pixelsPerYear;
-let translateX = (window.innerWidth / 2) - targetX; // Done! Centers 1950 right here
+
+// THE FIX: Multiplies targetX by scale so 1950 stays dead-center at smaller zooms
+let translateX = (window.innerWidth / 2) - (targetX * scale); 
 let translateY = 0;
 
 let isDragging = false;
