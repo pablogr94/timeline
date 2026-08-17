@@ -1,0 +1,394 @@
+@import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;700;800&display=swap');
+
+/* The Global Reset & Canvas Aesthetic */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #b0b0b0; 
+    overflow: hidden; 
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* The Viewport (What the camera sees) */
+#viewport {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: grab;
+}
+#viewport:active {
+    cursor: grabbing;
+}
+
+#track {
+    position: absolute;
+    top: 50%; 
+    left: 0;
+    width: 30000px;
+    height: 0; 
+    transform-origin: 0 0; 
+}
+
+#center-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.4); 
+    z-index: 0;
+    transform-origin: left center; 
+    transform: scaleY(var(--inv-scale, 1));
+}
+
+.century-line {
+    position: absolute;
+    top: 0; 
+    height: 100000px; 
+    width: 0;
+    border-left: 1px dashed rgba(0, 0, 0, 0.3); 
+    z-index: 1;
+    pointer-events: none;
+    transform: translate(0, -50%) scale(var(--inv-scale, 1)); 
+}
+
+.decade-line {
+    position: absolute;
+    top: 0; 
+    height: 100000px; 
+    width: 0;
+    border-left: 1px dashed rgba(0, 0, 0, 0.1); 
+    z-index: 0; 
+    pointer-events: none;
+    transform: translate(0, -50%) scale(var(--inv-scale, 1)); 
+}
+
+/* 1. Base card - THIS IS WHAT GOT DELETED! */
+.timeline-item {
+    position: absolute;
+    height: 190px;           /* Locks the vertical height for a clean timeline */
+    width: fit-content;      /* Allows horizontal/square images to dictate width */
+    min-width: 150px;        /* Keeps the grey placeholder boxes at 150px if no image */
+    background-color: #2a2a2a; 
+    box-sizing: border-box;
+    
+    border-radius: 0; 
+    overflow: hidden; 
+    
+    transition: transform 0.2s ease;
+    transform: translate(-50%, -50%) scale(calc(var(--inv-scale, 1) * var(--priority-scale, 1))); 
+    will-change: transform, top, left;
+    backface-visibility: hidden;
+}
+
+/* 2. Hover Card - Massive 2x Scale! */
+.timeline-item:hover {
+    z-index: 1000 !important; 
+    transition: transform 0.2s ease;
+    transform: translate(-50%, -50%) scale(calc(var(--inv-scale, 1) * 2));
+    cursor: pointer;
+}
+
+/* 3. Base Image - Clean, Full Color, 100% Opacity */
+.item-image {
+    height: 100%;
+    width: auto;             
+    display: block;          
+    object-fit: cover; 
+    
+    /* Grayscale and opacity have been removed! */
+}
+
+/* (You can completely delete the .timeline-item:hover .item-image block!) */
+
+/* 4. Hover Image - Return to Full Color and Solid */
+.timeline-item:hover .item-image {
+    filter: grayscale(0%);
+    opacity: 1;
+}
+
+/* 5. THE TEXT CONTAINER - Overlay on Hover */
+.item-info {
+    position: absolute;
+    bottom: 0; 
+    left: 0;
+    width: 100%; 
+    box-sizing: border-box; 
+    padding: 20px 6px 4px 6px; 
+    
+    color: #ffffff; 
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+    font-family: '42dot Sans', sans-serif;
+    
+    display: none; 
+    pointer-events: none; 
+    text-align: left;
+    z-index: 5; 
+}
+
+/* SHOW TEXT ON HOVER */
+.timeline-item:hover .item-info {
+    display: block;
+}
+
+/* TYPOGRAPHY HIERARCHY */
+.info-year {
+    font-size: 0.45rem;
+    font-weight: 300;
+    margin-bottom: 2px;
+    opacity: 0.8; 
+}
+
+.info-title {
+    font-size: 0.6rem; 
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.info-desc {
+    font-size: 0.45rem; 
+    font-weight: 300;
+    line-height: 1.2;
+    opacity: 0.9;
+}
+
+.year-label {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    font-family: '42dot Sans', sans-serif;
+    font-size: 1rem; 
+    font-weight: 300; 
+    color: #ffffff;  
+    pointer-events: none;
+    z-index: 5;
+    
+    transform: translate(
+        calc(8px * var(--inv-scale, 1)), 
+        calc(-50vh * var(--inv-scale, 1) + 40px * var(--inv-scale, 1))
+    ) scale(var(--inv-scale, 1));
+    
+    transform-origin: top left;
+}
+
+/* Temporarily kills transitions while scrolling to prevent jitter */
+.is-zooming .timeline-item,
+.is-zooming .timeline-item:hover {
+    transition: none !important;
+}
+
+/* --- CONTEXT TRACKS (Semantic Architecture) --- */
+#world-events-track {
+    position: absolute;
+    /* Increased from 300px to 450px for more breathing room */
+    top: calc(-450px * var(--inv-scale, 1)); 
+    left: 0;
+    width: 100%;
+}
+
+#cultural-eras-track {
+    position: absolute;
+    /* Increased from 300px to 450px */
+    top: calc(450px * var(--inv-scale, 1)); 
+    left: 0;
+    width: 100%;
+}
+
+/* The actual span container */
+.context-item {
+    position: absolute;
+    height: 1px;
+    /* width and left are injected by JavaScript */
+}
+
+/* The visual line - Opaque gray, centered transform origin */
+.context-line {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%;
+    height: 0.5px;
+    background-color: #7a7a7a; 
+    
+    transform-origin: left center; 
+    transform: scaleY(var(--inv-scale, 1));
+}
+
+/* The Start and End dots */
+.context-dot {
+    position: absolute;
+    
+    /* THE FIX: Reverted to a simple hardcoded -1px offset! No calc()! */
+    top: -1px; 
+    
+    width: 3px;
+    height: 3px;
+    
+    background-color: #7a7a7a; 
+    border-radius: 50%;
+    transform: scale(var(--inv-scale, 1));
+}
+
+.context-dot.start { 
+    left: -1.5px; 
+    transform-origin: center;
+}
+.context-dot.end { 
+    right: -1.5px; 
+    transform-origin: center;
+}
+/* The Text Container */
+.context-title {
+    position: absolute;             /* Fixed: Kept absolute so top/left math works */
+    top: calc(8px * var(--inv-scale, 1)); 
+    left: 0;
+    width: fit-content;             /* THE FIX: Forces container to hug ONLY the text width */
+    
+    font-family: '42dot Sans', sans-serif;
+    color: #555555; 
+    white-space: nowrap;
+    
+    transform-origin: top left;
+    transform: scale(var(--inv-scale, 1));
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px; 
+
+    cursor: pointer;
+    pointer-events: auto;
+    /* Removed duplicate position: relative */
+}
+
+.context-item:hover {
+    z-index: 9999 !important;
+}
+
+/* Typography Hierarchy */
+.title-text {
+    font-size: 0.7rem; 
+    font-weight: 700; 
+}
+
+.title-year {
+    font-size: 0.7rem; 
+    font-weight: 400;
+    color: #7a7a7a;
+}
+
+/* --- HOVER CARD POPUPS (Overflow Protected) --- */
+
+.context-item:hover {
+    z-index: 9999 !important;
+}
+
+.context-title {
+    position: absolute;
+    top: calc(8px * var(--inv-scale, 1)); 
+    left: 0;
+    width: fit-content;
+    
+    font-family: '42dot Sans', sans-serif;
+    color: #555555; 
+    white-space: nowrap;
+    
+    transform-origin: top left;
+    transform: scale(var(--inv-scale, 1));
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px; 
+
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+/* --- HOVER CARD POPUPS (Dynamic Vertical Height) --- */
+
+.context-card {
+    position: absolute;
+    left: calc(100% + 12px);       /* Positioned to the right of the title */
+    width: 220px;
+    height: auto;                  /* Expands naturally to fit image and text */
+    
+    background-color: #1a1a1a; 
+    color: #ffffff;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    
+    border-radius: 0;              /* Sharp architectural edges */
+    box-shadow: none; 
+    
+    white-space: normal;
+    text-align: left;
+    
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    pointer-events: none;
+}
+
+/* Custom minimal scrollbar for long descriptions */
+.context-card::-webkit-scrollbar {
+    width: 4px;
+}
+.context-card::-webkit-scrollbar-thumb {
+    background: #444444;
+}
+
+/* TRACK-SPECIFIC ALIGNMENT: Keeps cards inside screen boundaries */
+#world-events-track .context-card {
+    top: 0;
+    bottom: auto;
+}
+
+#cultural-eras-track .context-card {
+    bottom: 0;
+    top: auto;
+}
+
+/* Hover trigger */
+.context-title:hover .context-card {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* Card Thumbnail Image (Edge-to-Edge & Uncropped) */
+.card-image {
+    /* THE FIX: Pulls the image flush against the top, left, and right borders of the card */
+    width: calc(100% + 28px); 
+    margin-top: -12px;
+    margin-left: -14px;
+    margin-right: -14px;
+    margin-bottom: 10px;
+    
+    /* THE FIX: Natural aspect ratio so the image NEVER gets cropped */
+    height: auto; 
+    display: block;
+}
+
+/* Popover Typography */
+.card-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.card-year {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+.card-desc {
+    font-size: 0.62rem;
+    font-weight: 300;
+    line-height: 1.45;
+    color: #d0d0d0;
+}

@@ -1,0 +1,58 @@
+{
+    "items": [
+      { "id": 1, "year": 1850, "title": "Industrial Loom", "priority": 2 },
+      { "id": 2, "year": 1889, "title": "Eiffel Tower", "priority": 1 },
+      { "id": 3, "year": 1919, "title": "Bauhaus Founded", "priority": 1 },
+      {
+        "id": 4, 
+        "year": 1969, 
+        "title": "Moon Landing", 
+        "description": "Apollo 11 lands on the moon.",
+        "priority": 1, 
+        "image": "images/moon-landing.jpg",
+        "link": "https://en.wikipedia.org/wiki/Apollo_11"
+      },
+      { "id": 5, "year": 1969, "title": "Arpanet Created", "priority": 2 },
+      { "id": 6, "year": 1969, "title": "Concorde First Flight", "priority": 2, "image": "images/concorde.jpg" },
+      { "id": 7, "year": 2007, "title": "First iPhone", "priority": 1 },
+      { "id": 8, "year": 2024, "title": "AI Generation", "priority": 2 },
+      { "id": 9, "year": 2012, "title": "Test", "priority": 2 }
+    ],
+    "contexts": [
+    { 
+      "title": "WWI", 
+      "start": 1914, 
+      "end": 1918, 
+      "type": "world_event",
+      "description": "The First World War shattered European empires and traditional ideals, triggering existential trauma that catalyzed radical art movements like Dada, Futurism, and Expressionism."
+    },
+    { "title": "Russian Revolution", "start": 1917, "end": 1923, "type": "world_event" },
+    { "title": "Spanish Civil War", "start": 1936, "end": 1939, "type": "world_event" },
+    { "title": "WWII", "start": 1939, "end": 1945, "type": "world_event" },
+    { "title": "Cold War", "start": 1947, "end": 1991, "type": "world_event" },
+
+    { "title": "Impressionism", "start": 1860, "end": 1890, "type": "cultural_era" },
+    { "title": "Art Nouveau", "start": 1890, "end": 1910, "type": "cultural_era" },
+    { "title": "Cubism", "start": 1907, "end": 1914, "type": "cultural_era" },
+    { 
+      "title": "Dada", 
+      "start": 1916, 
+      "end": 1924, 
+      "type": "cultural_era",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Grand_opening_of_the_first_Dada_exhibition%2C_Berlin%2C_5_June_1920.jpg",
+      "link": "https://en.wikipedia.org/wiki/Dada",
+      "description": "Born in Zurich's Cabaret Voltaire as a reaction to WWI slaughter. Dada embraced absurdity, nonsense, and anti-art."
+    },
+    { 
+      "title": "Bauhaus", 
+      "start": 1919, 
+      "end": 1933, 
+      "type": "cultural_era",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Dessau_Bauhaus-Geb%C3%A4ude_asv2024-06_img1.jpg/3840px-Dessau_Bauhaus-Geb%C3%A4ude_asv2024-06_img1.jpg",
+      "link": "https://en.wikipedia.org/wiki/Bauhaus",
+      "description": "German art school that combined crafts and fine arts, creating a revolutionary approach to design where form follows function."
+    },
+    { "title": "Surrealism", "start": 1924, "end": 1966, "type": "cultural_era" },
+    { "title": "Pop Art", "start": 1955, "end": 1970, "type": "cultural_era" }
+  ]
+  }
