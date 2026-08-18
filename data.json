@@ -1,24 +1,95 @@
 {
-    "items": [
-      { "id": 1, "year": 1850, "title": "Industrial Loom", "priority": 2 },
-      { "id": 2, "year": 1889, "title": "Eiffel Tower", "priority": 1 },
-      { "id": 3, "year": 1919, "title": "Bauhaus Founded", "priority": 1 },
-      {
-        "id": 4, 
-        "year": 1969, 
-        "title": "Moon Landing", 
-        "description": "Apollo 11 lands on the moon.",
-        "priority": 1, 
-        "image": "images/moon-landing.jpg",
-        "link": "https://en.wikipedia.org/wiki/Apollo_11"
-      },
-      { "id": 5, "year": 1969, "title": "Arpanet Created", "priority": 2 },
-      { "id": 6, "year": 1969, "title": "Concorde First Flight", "priority": 2, "image": "images/concorde.jpg" },
-      { "id": 7, "year": 2007, "title": "First iPhone", "priority": 1 },
-      { "id": 8, "year": 2024, "title": "AI Generation", "priority": 2 },
-      { "id": 9, "year": 2012, "title": "Test", "priority": 2 }
-    ],
-    "contexts": [
+  "items": [
+    {
+      "id": 1,
+      "year": 1851,
+      "title": "The Crystal Palace",
+      "artist": "Joseph Paxton",
+      "category": "architecture",
+      "priority": 1,
+      "image": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Crystal_Palace_interior.jpg",
+      "link": "https://en.wikipedia.org/wiki/The_Crystal_Palace",
+      "description": "A landmark of industrial architecture built for London's Great Exhibition. Constructed from cast iron and plate glass, it demonstrated early modular prefabrication on a massive scale."
+    },
+    {
+      "id": 2,
+      "year": 1926,
+      "title": "Metropolis Film Poster",
+      "artist": "Heinz Schulz-Neudamm",
+      "category": "graphic_design",
+      "priority": 1,
+      "image": "https://upload.wikimedia.org/wikipedia/en/9/97/Metropolis_%28German_three-sheet_poster%29.jpg",
+      "link": "https://en.wikipedia.org/wiki/Metropolis_(1927_film)",
+      "description": "An iconic Art Deco graphic design masterpiece featuring towering geometric skyscrapers and a streamlined metallic robot. It defined sci-fi visual language for a century."
+    },
+    {
+      "id": 3,
+      "year": 1947,
+      "title": "The 'New Look' Bar Suit",
+      "artist": "Christian Dior",
+      "category": "fashion",
+      "priority": 2,
+      "image": "https://upload.wikimedia.org/wikipedia/commons/2/26/Dior_denver_art1.jpg",
+      "link": "https://en.wikipedia.org/wiki/New_Look_(fashion)",
+      "description": "Revolutionized post-war fashion by rejecting wartime fabric rationing with cinched waists and voluminous pleated skirts. It re-established Paris as the global capital of haute couture."
+    },
+    {
+      "id": 4,
+      "year": 1956,
+      "title": "Eames Lounge Chair & Ottoman",
+      "artist": "Charles & Ray Eames",
+      "category": "furniture",
+      "priority": 1,
+      "image": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Reina_Design_Interior_Collection_Volume_2_%282570129830%29_%28cropped%29.jpg",
+      "link": "https://en.wikipedia.org/wiki/Eames_Lounge_Chair",
+      "description": "Designed for the Herman Miller furniture company, this piece elevated molded plywood and soft leather into a mid-century luxury staple designed to mimic the feel of a well-worn baseball glove."
+    },
+    {
+      "id": 5,
+      "year": 1968,
+      "title": "Valentine Typewriter",
+      "artist": "Ettore Sottsass & Perry King",
+      "category": "furniture",
+      "priority": 3,
+      "image": "https://www.cooperhewitt.org/wp-content/uploads/2013/06/90817_ac9c4fa53b9cddec_b.jpg",
+      "link": "https://en.wikipedia.org/wiki/Valentine_(typewriter)",
+      "description": "Created for Olivetti, this bright red portable typewriter turned a drab office machine into an anti-academic pop culture fashion statement precursor to modern industrial consumer design."
+    },
+    {
+      "id": 6,
+      "year": 1925,
+      "title": "Wassily Chair (Model B3)",
+      "artist": "Marcel Breuer",
+      "category": "furniture",
+      "priority": 1,
+      "image": "https://www.moma.org/media/W1siZiIsIjIxMDc4MyJdLFsicCIsImNvbnZlcnQiLCItcXVhbGl0eSA5MCAtcmVzaXplIDIwMDB4MjAwMFx1MDAzZSJdXQ.jpg",
+      "link": "https://en.wikipedia.org/wiki/Wassily_chair",
+      "description": "Designed while Marcel Breuer was leading the Bauhaus woodwork shop, this landmark piece was inspired by the bent tubular steel of bicycle handlebars. By replacing traditional bulky upholstery with taut leather straps, Breuer stripped the armchair down to its essential geometric form."
+    },
+    {
+      "id": 7,
+      "year": 1935,
+      "title": "Fallingwater",
+      "artist": "Frank Lloyd Wright",
+      "category": "architecture",
+      "priority": 1,
+      "image": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Fallingwater3.jpg",
+      "link": "https://en.wikipedia.org/wiki/Fallingwater",
+      "description": "Built over a natural waterfall in rural Pennsylvania, Fallingwater is Frank Lloyd Wright's ultimate expression of organic architecture. Cantilevered concrete terraces project dramatically over the stream, seamlessly integrating human living space with the surrounding forest."
+    },
+    {
+      "id": 8,
+      "year": 1951,
+      "title": "Farnsworth House",
+      "artist": "Ludwig Mies van der Rohe",
+      "category": "architecture",
+      "priority": 1,
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Farnsworth_House_Plano-9983.jpg/1280px-Farnsworth_House_Plano-9983.jpg",
+      "link": "https://en.wikipedia.org/wiki/Farnsworth_House",
+      "description": "Designed as a weekend retreat, this steel-and-glass residence embodies Mies van der Rohe's minimalist dictum 'less is more.' Elevated above a floodplain on white steel columns, its transparent floor-to-ceiling glass walls blur the line between nature and living quarters."
+    }
+  ],
+  "contexts": [
     { 
       "title": "WWI", 
       "start": 1914, 
@@ -30,19 +101,17 @@
     { "title": "Spanish Civil War", "start": 1936, "end": 1939, "type": "world_event" },
     { "title": "WWII", "start": 1939, "end": 1945, "type": "world_event" },
     { "title": "Cold War", "start": 1947, "end": 1991, "type": "world_event" },
-
-    { "title": "Impressionism", "start": 1860, "end": 1890, "type": "cultural_era" },
-    { "title": "Art Nouveau", "start": 1890, "end": 1910, "type": "cultural_era" },
-    { "title": "Cubism", "start": 1907, "end": 1914, "type": "cultural_era" },
     { 
-      "title": "Dada", 
-      "start": 1916, 
-      "end": 1924, 
-      "type": "cultural_era",
-      "image": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Grand_opening_of_the_first_Dada_exhibition%2C_Berlin%2C_5_June_1920.jpg",
-      "link": "https://en.wikipedia.org/wiki/Dada",
-      "description": "Born in Zurich's Cabaret Voltaire as a reaction to WWI slaughter. Dada embraced absurdity, nonsense, and anti-art."
+      "title": "Moon Landing", 
+      "year": 1969, 
+      "type": "world_event",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/9/98/Aldrin_Apollo_11_original.jpg",
+      "link": "https://en.wikipedia.org/wiki/Apollo_11",
+      "description": "Apollo 11 was the American spaceflight that first landed humans on the Moon. Commander Neil Armstrong and lunar module pilot Buzz Aldrin formed the American crew that landed the Apollo Lunar Module Eagle."
     },
+
+
+    { "title": "Art Nouveau", "start": 1890, "end": 1910, "type": "cultural_era" },
     { 
       "title": "Bauhaus", 
       "start": 1919, 
@@ -52,7 +121,23 @@
       "link": "https://en.wikipedia.org/wiki/Bauhaus",
       "description": "German art school that combined crafts and fine arts, creating a revolutionary approach to design where form follows function."
     },
-    { "title": "Surrealism", "start": 1924, "end": 1966, "type": "cultural_era" },
-    { "title": "Pop Art", "start": 1955, "end": 1970, "type": "cultural_era" }
+    {
+      "title": "Arts & Crafts Movement",
+      "start": 1880,
+      "end": 1920,
+      "type": "cultural_era",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/0/03/Original_William_Morris%27s_patterns%2C_digitally_enhanced_by_rawpixel_00012.jpg",
+      "link": "https://en.wikipedia.org/wiki/Arts_and_Crafts_movement",
+      "description": "An international movement that championed traditional craftsmanship against mass industrialization, favoring natural motifs and decorative honesty."
+    },
+    {
+      "title": "Mid-Century Modernism",
+      "start": 1945,
+      "end": 1969,
+      "type": "cultural_era",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Farnsworth_House_by_Mies_Van_Der_Rohe_-_interior-2.jpg",
+      "link": "https://en.wikipedia.org/wiki/Mid-century_modern",
+      "description": "Characterized by clean lines, organic shapes, and democratic mass-production materials like molded plywood, plastic, and fiberglass."
+    }
   ]
-  }
+}

@@ -4,25 +4,28 @@ const maxYear = 2100;
 const pixelsPerYear = 100; 
 
 // Base overlap steps at 1x zoom
-const verticalOffsetStep = 100;    // Increased from 70 to peek out vertically
-const horizontalOffsetStep = 45;   // Increased from 22 to fan out horizontally
-const minScreenGap = 160;
+const verticalOffsetStep = 50;    // Increased from 70 to peek out vertically
+const horizontalOffsetStep = 25;   // Increased from 22 to fan out horizontally
+const minScreenGap = 120;
+
+// THE FIX: Move the animation speed here so it is easy to tweak!
+const glideSpeed = 0.4; // 0.05 is very floaty, 0.15 is balanced, 0.4 is snappy
 
 // --- INTERACTION STATE ---
-let scale = 0.1; // Lower number = more zoomed out! (Try 0.3 or 0.4)
+let targetScale = 0.1; // Where the zoom WANTS to be
+let scale = targetScale; // Where the zoom ACTUALLY is
 
-// Center on 1950 automatically on load
 const targetYear = 1950;
 const targetX = (targetYear - minYear) * pixelsPerYear;
 
-// THE FIX: Multiplies targetX by scale so 1950 stays dead-center at smaller zooms
-let translateX = (window.innerWidth / 2) - (targetX * scale); 
+let targetTranslateX = (window.innerWidth / 2) - (targetX * targetScale);
+let translateX = targetTranslateX;
 let translateY = 0;
 
 let isDragging = false;
 let startX, startY;
 let loadedItems = []; 
-let zoomTimeout; // NEW: Timer to track when scrolling stops
+let zoomTimeout;
 
 const viewport = document.getElementById('viewport');
 const track = document.getElementById('track');
@@ -105,13 +108,23 @@ function renderItems(items) {
             el.style.backgroundColor = 'transparent'; 
         }
 
-        // 2. Build the info layer (only includes description if it exists in JSON)
-        const descHTML = item.description ? `<div class="info-desc">${item.description}</div>` : '';
+        // 2. Build the info layer
         html += `
             <div class="item-info">
-                <div class="info-year">${item.year}</div>
-                <div class="info-title">${item.title}</div>
-                ${descHTML}
+                <div class="info-header">
+                    <div class="info-meta">
+                        <div class="info-year">${item.year}</div>
+                        <div class="info-title">${item.title}</div>
+                    </div>
+                    ${item.description ? `<div class="info-toggle">+ info</div>` : ''}
+                </div>
+                
+                ${item.description ? `
+                <div class="desc-mask">
+                    <div class="info-desc-box">${item.description}</div>
+                </div>
+                ` : ''}
+                
             </div>
         `;
         
@@ -131,17 +144,23 @@ function renderItems(items) {
     updateTransform();
 }
 
-// --- RENDER CONTEXTS (Masonry Stacking + Popover + Click Links) ---
+// --- RENDER CONTEXTS (Handles both Spans and Single Points) ---
 function renderContexts(contexts) {
-    let worldEventLanes = [];  // Tracks occupied space in the world events track
-    let culturalEraLanes = []; // Tracks occupied space in the cultural eras track
+    let worldEventLanes = [];  
+    let culturalEraLanes = []; 
     
-    // Sort chronologically so they stack predictably left-to-right
-    contexts.sort((a, b) => a.start - b.start);
+    // Sort chronologically using either year or start
+    contexts.sort((a, b) => (a.year || a.start) - (b.year || b.start));
 
     contexts.forEach(item => {
-        const startX = (item.start - minYear) * pixelsPerYear;
-        const width = (item.end - item.start) * pixelsPerYear;
+        // 1. Determine if this is a point-in-time or a duration
+        const isPointEvent = item.year !== undefined;
+        const startYear = isPointEvent ? item.year : item.start;
+        const endYear = isPointEvent ? item.year : item.end;
+        
+        const startX = (startYear - minYear) * pixelsPerYear;
+        // Point events have a width of 0, spans calculate normally
+        const width = isPointEvent ? 0 : (endYear - startYear) * pixelsPerYear; 
         const endX = startX + width;
         
         const buffer = 150; 
@@ -166,41 +185,46 @@ function renderContexts(contexts) {
         }
 
         const el = document.createElement('div');
-        el.className = 'context-item';
+        // THE FIX: Adds a specific class if it is a single moment in time
+        el.className = isPointEvent ? 'context-item point-event' : 'context-item';
         el.style.left = `${startX}px`;
         el.style.width = `${width}px`;
         
         const laneOffset = assignedLane * 45; 
         el.style.top = `calc(${isWorldEvent ? -laneOffset : laneOffset}px * var(--inv-scale, 1))`;
 
-        // 1. Build optional Card Image HTML
+        // 2. Format Date Text (Single year vs Range)
+        const dateText = isPointEvent ? `${startYear}` : `${startYear} - ${endYear}`;
+
         const imgHTML = item.image 
             ? `<img src="${item.image}" class="card-image" alt="${item.title}">` 
             : '';
 
-        // 2. Build Card Popover HTML (only if image or description exists)
         const descHTML = (item.description || item.image) 
             ? `<div class="context-card">
                  ${imgHTML}
                  <div class="card-title">${item.title}</div>
-                 <div class="card-year">${item.start} — ${item.end}</div>
+                 <div class="card-year">${dateText}</div>
                  ${item.description ? `<div class="card-desc">${item.description}</div>` : ''}
                </div>`
             : '';
 
-        // 3. Inject into the DOM
+        // 3. Build Visual Graphics (Dot vs Line+Dots)
+        const visualHTML = isPointEvent 
+            ? `<div class="context-circle"></div>` // Just one dot for point events
+            : `<div class="context-line"></div>
+               <div class="context-dot start"></div>
+               <div class="context-dot end"></div>`;
+
         el.innerHTML = `
-            <div class="context-line"></div>
-            <div class="context-dot start"></div>
-            <div class="context-dot end"></div>
+            ${visualHTML}
             <div class="context-title">
                 <span class="title-text">${item.title}</span>
-                <span class="title-year">${item.start} - ${item.end}</span>
+                <span class="title-year">${dateText}</span>
                 ${descHTML}
             </div>
         `;
         
-        // 4. Click to open Wikipedia / Link in a new tab!
         if (item.link) {
             const titleEl = el.querySelector('.context-title');
             titleEl.addEventListener('click', (e) => {
@@ -236,7 +260,8 @@ function updateVerticalStacking() {
     let currentCluster = [];
 
     // Safe Grouping: Cards only cluster if they actually touch horizontally on screen
-    loadedItems.forEach(item => {
+    loadedItems.forEach((item, index) => {
+        item.globalIndex = index; // THE FIX 1: Lock a permanent index for UP/DOWN parity
         item.screenX = (item.year - minYear) * pixelsPerYear * scale;
 
         if (currentCluster.length === 0) {
@@ -255,44 +280,40 @@ function updateVerticalStacking() {
 
     // Apply positions with Cascading Fade
     clusters.forEach(cluster => {
-        let clusterFade = 1; // Tracks the fade for the whole deck of cards
-
         cluster.forEach((item, count) => {
             let yOffset = 0;
             let xOffset = 0;
             
-            // Initialize tracker for the first item
             if (count === 0) item.sameYearIndex = 0;
             
             if (count > 0) {
                 const prevItem = cluster[count - 1];
                 const dist = item.screenX - prevItem.screenX;
 
-                // NEW FIX: Track if it shares the EXACT year for horizontal fanning
                 item.sameYearIndex = (item.year === prevItem.year) ? prevItem.sameYearIndex + 1 : 0;
 
                 // Cards begin to unstack when they exceed 40% of the breaking gap
                 const solidGap = dynamicMinGap * 0.4;
-                
                 let localFade = 1;
                 if (dist > solidGap) {
                     localFade = 1 - ((dist - solidGap) / (dynamicMinGap - solidGap));
                     localFade = Math.max(0, Math.min(1, localFade));
                 }
-                
-                // Cascade the fade: outer cards flatten out if inner cards do
-                clusterFade = Math.min(clusterFade, localFade);
 
                 // VERTICAL: Always stack so cards don't hide each other
                 const yMultiplier = Math.ceil(count / 2);
-                const yDirection = count % 2 === 1 ? -1 : 1;
-                yOffset = yMultiplier * yDirection * dynamicVerticalStep * clusterFade;
                 
-                // HORIZONTAL: Only fan out if they share the exact same year!
+                // THE FIX 2: Use the global parity so an item NEVER flips directions when clusters split!
+                const yDirection = item.globalIndex % 2 === 1 ? -1 : 1; 
+                
+                // THE FIX 3: Apply the fade directly to the item so it smoothly settles back to the line
+                yOffset = yMultiplier * yDirection * dynamicVerticalStep * localFade;
+                
+                // HORIZONTAL: Only fan out if they share the exact same year
                 if (item.sameYearIndex > 0) {
                     const xMultiplier = Math.ceil(item.sameYearIndex / 2);
                     const xDirection = item.sameYearIndex % 2 === 1 ? -1 : 1;
-                    xOffset = xMultiplier * xDirection * dynamicHorizontalStep * clusterFade;
+                    xOffset = xMultiplier * xDirection * dynamicHorizontalStep * localFade;
                 }
             }
 
@@ -305,9 +326,14 @@ function updateVerticalStacking() {
             item.element.style.left = `calc(${item.baseX}px + (${xOffset}px * var(--inv-scale, 1)))`;
             item.element.style.top = `calc(${yOffset}px * var(--inv-scale, 1))`;
             
-            // Major milestones always sit on top of the pile
-            const baseZ = isMajorMilestone ? 50 : 10;
-            item.element.style.zIndex = baseZ + count;
+            // THE FIX: Locked Z-index based on global chronology!
+            // Normal items start at 10. Major milestones get a massive +500 boost 
+            // so they never get buried by a long timeline of normal items.
+            const baseZ = isMajorMilestone ? 500 : 10;
+            
+            // We use globalIndex instead of count, so the stack order NEVER 
+            // recalculates or fights during the smooth CSS glide!
+            item.element.style.zIndex = baseZ + item.globalIndex;
         });
     });
 }
@@ -323,32 +349,32 @@ function updateTransform() {
 // --- 6. PAN LOGIC ---
 viewport.addEventListener('mousedown', (e) => {
     isDragging = true;
-    startX = e.clientX - translateX;
-    startY = e.clientY - translateY;
+    startX = e.clientX - targetTranslateX;
 });
 
 window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     
-    let targetX = e.clientX - startX;
+    let newX = e.clientX - startX;
     
     const trackWidth = (maxYear - minYear) * pixelsPerYear;
-    const scaledWidth = trackWidth * scale;
+    const scaledWidth = trackWidth * targetScale;
     const padding = window.innerWidth / 2;
     
     const minX = -(scaledWidth - padding); 
     const maxX = padding;                  
     
-    if (targetX > maxX) {
-        targetX = maxX;
-        startX = e.clientX - targetX; 
-    } else if (targetX < minX) {
-        targetX = minX;
-        startX = e.clientX - targetX; 
+    if (newX > maxX) {
+        newX = maxX;
+        startX = e.clientX - newX; 
+    } else if (newX < minX) {
+        newX = minX;
+        startX = e.clientX - newX; 
     }
     
-    translateX = targetX;
-    translateY = 0; 
+    // Instantly snap both target and actual coordinates so dragging feels snappy!
+    targetTranslateX = newX;
+    translateX = targetTranslateX; 
     
     updateTransform();
 });
@@ -360,38 +386,56 @@ window.addEventListener('mouseleave', () => isDragging = false);
 viewport.addEventListener('wheel', (e) => {
     e.preventDefault(); 
 
-    // --- NEW: DISABLE TRANSITIONS WHILE SCROLLING ---
-    track.classList.add('is-zooming');
-    
-    // Clear the timer if you keep scrolling
-    clearTimeout(zoomTimeout);
-    
-    // Set a timer to re-enable transitions 150ms after your last scroll tick
-    zoomTimeout = setTimeout(() => {
-        track.classList.remove('is-zooming');
-    }, 150);
-    // ------------------------------------------------
 
     const mouseX = e.clientX;
-    const xs = (mouseX - translateX) / scale;
+    const xs = (mouseX - targetTranslateX) / targetScale;
 
-    const zoomAmount = e.deltaY > 0 ? 0.85 : 1.15;
-    scale *= zoomAmount;
-    scale = Math.max(0.1, Math.min(scale, 4));
+    // Use smaller increments for smoother wheel stepping
+    const zoomAmount = e.deltaY > 0 ? 0.90 : 1.10; 
+    targetScale *= zoomAmount;
+    targetScale = Math.max(0.1, Math.min(targetScale, 4));
 
-    translateX = mouseX - xs * scale;
+    targetTranslateX = mouseX - xs * targetScale;
 
     const trackWidth = (maxYear - minYear) * pixelsPerYear;
-    const scaledWidth = trackWidth * scale;
+    const scaledWidth = trackWidth * targetScale;
     const padding = window.innerWidth / 2;
 
     const minX = -(scaledWidth - padding);
     const maxX = padding;
 
-    translateX = Math.max(minX, Math.min(maxX, translateX));
+    targetTranslateX = Math.max(minX, Math.min(maxX, targetTranslateX));
 
-    updateTransform();
+    // Notice we REMOVED updateTransform() from here! The render loop handles it now.
 }, { passive: false });
+
+// --- 8. SMOOTH RENDER LOOP ---
+function renderLoop() {
+    const diffScale = targetScale - scale;
+    const diffX = targetTranslateX - translateX;
+
+    if (Math.abs(diffScale) > 0.0001 || Math.abs(diffX) > 0.01) {
+        
+        track.classList.add('is-moving'); 
+
+        // THE FIX: Now using your easily adjustable glideSpeed variable!
+        scale += diffScale * glideSpeed;
+        translateX += diffX * glideSpeed;
+
+        track.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        track.style.setProperty('--inv-scale', 1 / scale);
+        
+        updateVerticalStacking();
+    } else {
+        track.classList.remove('is-moving');
+        scale = targetScale;
+        translateX = targetTranslateX;
+    }
+    
+    requestAnimationFrame(renderLoop);
+}
+
+renderLoop();
 
 // --- KICK OFF APP ---
 loadData();
