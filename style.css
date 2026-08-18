@@ -83,30 +83,28 @@ body, html {
     border-radius: 0; 
     overflow: visible; 
     
-    /* THE FIX: Replaced ease-out with a smooth custom deceleration curve */
-    transition: transform 0.2s ease, top 0.5s cubic-bezier(0.22, 1, 0.36, 1), left 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    translate: -50% -50%;
+    transform: scale(calc(var(--inv-scale, 1) * var(--priority-scale, 1))); 
+    scale: 1;
     
-    transform: translate(-50%, -50%) scale(calc(var(--inv-scale, 1) * var(--priority-scale, 1))); 
-    will-change: transform, top, left;
+    /* THE TWEAK: Changed scale from 0.2s to 0.4s for a slower, richer pop! */
+    transition: scale 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                left 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    
+    will-change: transform, scale, top, left;
     backface-visibility: hidden;
 }
 
 /* 2. Hover Card */
 .timeline-item:hover {
     z-index: 1000 !important; 
-    
-    /* THE FIX: Updated the hover state to match */
-    transition: transform 0.2s ease, top 0.5s cubic-bezier(0.22, 1, 0.36, 1), left 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-    
-    transform: translate(-50%, -50%) scale(calc(var(--inv-scale, 1) * 3));
     cursor: pointer;
+    
+    /* THE FIX: Counters the priority scale so every item ends up at the exact same size! */
+    scale: calc(3 / var(--priority-scale, 1)); 
 }
 
-/* THE FIX: Updated the movement state to use the new curve */
-.is-moving .timeline-item,
-.is-moving .timeline-item:hover {
-    transition: top 0.5s cubic-bezier(0.22, 1, 0.36, 1), left 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important; 
-}
 
 /* 3. Base Image - Clean, Full Color, 100% Opacity */
 .item-image {
@@ -131,24 +129,29 @@ body, html {
     position: absolute;
     bottom: 0; 
     left: 0;
-    width: 100%; 
+    width: 300%; 
     box-sizing: border-box; 
     padding: 14px 10px 10px 10px; 
-    
     color: #ffffff; 
-    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
     font-family: '42dot Sans', sans-serif;
+    
+    /* THE FIX: An "eased" gradient that looks incredibly smooth and premium, 
+       avoiding the muddy gray mid-tones of a standard linear-gradient. */
+    background: linear-gradient(
+        to top,
+        rgba(26, 26, 26, 0.95) 0%,
+        rgba(26, 26, 26, 0.8) 25%,
+        rgba(26, 26, 26, 0.5) 55%,
+        rgba(26, 26, 26, 0.15) 80%,
+        rgba(26, 26, 26, 0) 100%
+    );
     
     display: none; 
     pointer-events: auto; 
     text-align: left;
     z-index: 5; 
-    
-    /* THE MAGIC FIX: This cancels out the parent card's 3x zoom, 
-       locking the text to a stable, readable base size! */
     transform: scale(0.333); 
     transform-origin: bottom left;
-    width: 300%; /* Expands width to compensate for the counter-scale */
 }
 
 /* SHOW TEXT ON HOVER */
@@ -199,10 +202,13 @@ body, html {
 /* The mask sits exactly below the image and hides anything that slides above its border */
 .desc-mask {
     position: absolute;
-    top: 100%; 
+    
+    /* THE FIX: Pulled up by 1 pixel to overlap the image and kill the sub-pixel gap! */
+    top: calc(100% - 1px); 
+    
     left: 0;
     width: 100%;
-    overflow: hidden; /* THE MAGIC: Hides the box when it slides up! */
+    overflow: hidden; 
 }
 
 .info-desc-box {
@@ -404,36 +410,30 @@ body, html {
 
 .context-card {
     position: absolute;
-    left: calc(100% + 12px);       /* Positioned to the right of the title */
+    left: calc(100% + 12px);
     width: 220px;
-    height: auto;                  /* Expands naturally to fit image and text */
+    height: auto;
     
     background-color: #1a1a1a; 
     color: #ffffff;
     padding: 12px 14px;
     box-sizing: border-box;
     
-    border-radius: 0;              /* Sharp architectural edges */
+    border-radius: 0; 
     box-shadow: none; 
-    
     white-space: normal;
     text-align: left;
     
     opacity: 0;
     visibility: hidden;
-    transform: translateX(-4px);
+    
+    /* THE TWEAK: Pulled back to -20px so it travels a much greater distance! */
+    transform: translateX(-20px);
+    
+    /* Leave transition (No delay) */
     transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
     pointer-events: none;
-
     z-index: 99999 !important;
-}
-
-/* Custom minimal scrollbar for long descriptions */
-.context-card::-webkit-scrollbar {
-    width: 4px;
-}
-.context-card::-webkit-scrollbar-thumb {
-    background: #444444;
 }
 
 /* TRACK-SPECIFIC ALIGNMENT: Keeps cards inside screen boundaries */
@@ -452,6 +452,11 @@ body, html {
     opacity: 1;
     visibility: visible;
     transform: translateX(0);
+    
+    /* THE TWEAK: Reduced the delay to 0.1s for a snappier, yet protected feel */
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
+                transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
+                visibility 0s 0.1s;
 }
 
 /* Card Thumbnail Image (Edge-to-Edge & Uncropped) */
