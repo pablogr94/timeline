@@ -11,6 +11,13 @@ const minScreenGap = 120;
 // THE FIX: Move the animation speed here so it is easy to tweak!
 const glideSpeed = 0.4; // 0.05 is very floaty, 0.15 is balanced, 0.4 is snappy
 
+// --- MOBILE TOUCH CONSTANTS ---
+const touchFriction = 0.92;         // 0.98 is very icy, 0.85 is heavy/sticky
+const touchVelocityMultiplier = 16; // How forcefully a flick throws the canvas
+const touchCancelTimer = 50;        // ms of finger resting before momentum is canceled
+const touchMinFlickSpeed = 0.1;     // Minimum velocity to trigger momentum
+const touchStopThreshold = 0.05;    // When the sliding animation goes to sleep
+
 // --- INTERACTION STATE ---
 let targetScale = 0.1; // Where the zoom WANTS to be
 let scale = targetScale; // Where the zoom ACTUALLY is
@@ -117,6 +124,7 @@ function renderItems(items) {
                         <div class="info-title">${item.title}</div>
                     </div>
                     ${item.description ? `<div class="info-toggle">+ info</div>` : ''}
+                    <div class="close-btn">&times;</div>
                 </div>
                 
                 ${item.description ? `
@@ -130,16 +138,94 @@ function renderItems(items) {
         
         el.innerHTML = html;
         
-        // 3. Add Click-to-Open logic
-        if (item.link) {
-            el.addEventListener('click', () => {
-                window.open(item.link, '_blank');
-            });
+      // 3. Smart Click Logic (Viewport-Protected Morph)
+      el.addEventListener('click', (e) => {
+        const isTouchDevice = window.matchMedia("(hover: none)").matches;
+
+        if (!isTouchDevice) {
+            // DESKTOP: Native 1-click behavior
+            if (item.link) window.open(item.link, '_blank');
+            return;
         }
-        
+
+        // MOBILE: Clone Teleport Logic
+        if (document.querySelector('.mobile-clone')) return; 
+
+        // 1. Measure original card position
+        const rect = el.getBoundingClientRect();
+
+        // 2. Create clone
+        const clone = el.cloneNode(true);
+        clone.className = 'timeline-item mobile-clone'; 
+
+        // 3. Measure expanded height IN-BOUNDS to prevent mobile 'vh' recalculation shifts
+        clone.style.transition = 'none';
+        clone.style.position = 'fixed';
+        clone.style.top = '0';
+        clone.style.left = '0';
+        clone.style.width = '100vw';
+        clone.style.height = 'auto';
+        clone.style.visibility = 'hidden';
+        clone.style.pointerEvents = 'none';
+        document.body.appendChild(clone);
+
+        const expandedHeight = clone.offsetHeight;
+        const expandedTop = (window.innerHeight - expandedHeight) / 2;
+
+        // 4. Snap clone directly over original card
+        clone.style.left = `${rect.left}px`;
+        clone.style.top = `${rect.top}px`;
+        clone.style.width = `${rect.width}px`;
+        clone.style.height = `${rect.height}px`;
+
+        // Hide original card on timeline
+        el.style.opacity = '0';
+
+        // 5. Force layout commit
+        clone.offsetHeight; 
+
+        // 6. Restore visibility & animate outward
+        clone.style.visibility = 'visible';
+        clone.style.pointerEvents = 'auto';
+        clone.style.transition = ''; 
+        clone.classList.add('is-expanded');
+        clone.style.left = '0px';
+        clone.style.top = `${expandedTop}px`;
+        clone.style.width = '100vw';
+        clone.style.height = `${expandedHeight}px`;
+
+        // CLOSE LOGIC
+        clone.querySelector('.close-btn').addEventListener('click', (btnEvent) => {
+            btnEvent.stopPropagation();
+            
+            const liveRect = el.getBoundingClientRect();
+            
+            clone.classList.remove('is-expanded');
+            clone.style.left = `${liveRect.left}px`;
+            clone.style.top = `${liveRect.top}px`;
+            clone.style.width = `${liveRect.width}px`;
+            clone.style.height = `${liveRect.height}px`;
+            
+            setTimeout(() => {
+                el.style.opacity = '1';
+                clone.remove();
+            }, 400); 
+        });
+
+        // SECOND-TAP LOGIC (Open Link)
+        clone.addEventListener('click', (cloneEvent) => {
+            if (!cloneEvent.target.classList.contains('close-btn') && item.link) {
+                window.open(item.link, '_blank');
+            }
+        });
+    });
+
+        // ==========================================
+        // THE FIX: You accidentally deleted these 3 lines!
         track.appendChild(el);
         item.element = el;
-    });
+    }); 
+    // ==========================================
 
     updateTransform();
 }
@@ -382,6 +468,153 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mouseup', () => isDragging = false);
 window.addEventListener('mouseleave', () => isDragging = false);
 
+
+// --- MOBILE TOUCH LOGIC (PAN & ZOOM) ---
+// Pan State
+let lastTouchTime = 0;
+let lastTouchXPos = 0;
+let velocityX = 0;
+let wasZooming = false; // THE FIX: Prevents pan snapping after a zoom
+
+// Zoom State
+let initialPinchDistance = null;
+let initialScale = 1;
+
+viewport.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+        // Only allow a new pan if we aren't lingering from a previous zoom
+        if (!wasZooming) {
+            isDragging = true;
+            startX = e.touches[0].clientX - targetTranslateX;
+            
+            lastTouchXPos = e.touches[0].clientX;
+            lastTouchTime = Date.now();
+            velocityX = 0;
+        }
+    } else if (e.touches.length === 2) {
+        // 2-FINGER PINCH INITIATION
+        isDragging = false; 
+        wasZooming = true; // Lock panning
+        
+        initialPinchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialScale = targetScale;
+    }
+}, { passive: false });
+
+window.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && isDragging) {
+        // --- 1-FINGER PANNING ---
+        let currentClientX = e.touches[0].clientX;
+        let newX = currentClientX - startX;
+        
+        let currentTime = Date.now();
+        let dt = currentTime - lastTouchTime;
+        if (dt > 0) {
+            velocityX = (currentClientX - lastTouchXPos) / dt;
+        }
+        lastTouchXPos = currentClientX;
+        lastTouchTime = currentTime;
+        
+        const trackWidth = (maxYear - minYear) * pixelsPerYear;
+        const scaledWidth = trackWidth * targetScale;
+        const padding = window.innerWidth / 2;
+        const minX = -(scaledWidth - padding); 
+        const maxX = padding;                  
+        
+        if (newX > maxX) {
+            newX = maxX;
+            startX = currentClientX - newX; 
+        } else if (newX < minX) {
+            newX = minX;
+            startX = currentClientX - newX; 
+        }
+        
+        targetTranslateX = newX;
+        translateX = targetTranslateX; 
+        updateTransform();
+        
+    } else if (e.touches.length === 2 && initialPinchDistance) {
+        // --- 2-FINGER ZOOMING ---
+        e.preventDefault(); 
+        
+        const currentDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        
+        let newScale = initialScale * (currentDistance / initialPinchDistance);
+        newScale = Math.max(0.1, Math.min(newScale, 4)); 
+        
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const xs = (midX - targetTranslateX) / targetScale;
+        
+        targetScale = newScale;
+        targetTranslateX = midX - xs * targetScale;
+
+        const trackWidth = (maxYear - minYear) * pixelsPerYear;
+        const scaledWidth = trackWidth * targetScale;
+        const padding = window.innerWidth / 2;
+
+        const minX = -(scaledWidth - padding);
+        const maxX = padding;
+
+        targetTranslateX = Math.max(minX, Math.min(maxX, targetTranslateX));
+    }
+}, { passive: false });
+
+window.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+        initialPinchDistance = null;
+    }
+    
+    if (e.touches.length === 0) {
+        // THE FIX: Unlock panning only when all fingers leave the glass
+        wasZooming = false; 
+        
+        if (isDragging) {
+            // --- MOMENTUM RELEASE ---
+            isDragging = false;
+            
+            if (Date.now() - lastTouchTime > touchCancelTimer) {
+                velocityX = 0;
+            }
+            
+            if (Math.abs(velocityX) > touchMinFlickSpeed) {
+                function applyTouchMomentum() {
+                    if (isDragging) return; 
+                    
+                    targetTranslateX += velocityX * touchVelocityMultiplier; 
+                    
+                    const trackWidth = (maxYear - minYear) * pixelsPerYear;
+                    const scaledWidth = trackWidth * targetScale;
+                    const padding = window.innerWidth / 2;
+                    const minX = -(scaledWidth - padding); 
+                    const maxX = padding;
+                    
+                    targetTranslateX = Math.max(minX, Math.min(maxX, targetTranslateX));
+                    
+                    translateX = targetTranslateX;
+                    updateTransform();
+                    
+                    velocityX *= touchFriction; 
+                    
+                    if (Math.abs(velocityX) > touchStopThreshold) {
+                        requestAnimationFrame(applyTouchMomentum);
+                    }
+                }
+                requestAnimationFrame(applyTouchMomentum);
+            }
+        }
+    } else if (e.touches.length === 1) {
+        // THE FIX: Do nothing. Let the 1 remaining finger rest harmlessly 
+        // while the render loop finishes its smooth glide.
+        isDragging = false; 
+    }
+});
+
 // --- 7. ZOOM LOGIC WITH BOUNDARIES ---
 viewport.addEventListener('wheel', (e) => {
     e.preventDefault(); 
@@ -440,3 +673,11 @@ renderLoop();
 // --- KICK OFF APP ---
 loadData();
 updateTransform();
+
+// Tap empty canvas to close active items on mobile
+viewport.addEventListener('click', (e) => {
+    if (!e.target.closest('.timeline-item') && !e.target.closest('.context-item')) {
+        document.querySelectorAll('.timeline-item.is-active, .context-item.is-active')
+                .forEach(n => n.classList.remove('is-active'));
+    }
+});
