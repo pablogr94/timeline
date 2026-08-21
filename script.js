@@ -1,3 +1,10 @@
+// Lock screen height variable once on load to prevent mobile toolbar vh jumps
+function setStableAppHeight() {
+    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+}
+setStableAppHeight();
+window.addEventListener('orientationchange', setStableAppHeight);
+
 // --- TIMELINE CONSTANTS ---
 const minYear = 1800;
 const maxYear = 2100;
@@ -116,6 +123,8 @@ function renderItems(items) {
         }
 
         // 2. Build the info layer
+        const hasDrawer = item.description || item.link;
+
         html += `
             <div class="item-info">
                 <div class="info-header">
@@ -123,13 +132,26 @@ function renderItems(items) {
                         <div class="info-year">${item.year}</div>
                         <div class="info-title">${item.title}</div>
                     </div>
-                    ${item.description ? `<div class="info-toggle">+ info</div>` : ''}
+                    ${hasDrawer ? `<div class="info-toggle">+ info</div>` : ''}
                     <div class="close-btn">&times;</div>
                 </div>
                 
-                ${item.description ? `
+                ${hasDrawer ? `
                 <div class="desc-mask">
-                    <div class="info-desc-box">${item.description}</div>
+                    <div class="info-desc-box">
+                        ${item.description ? `<div>${item.description}</div>` : ''}
+                        ${item.link ? `
+                        <div class="wiki-link-container">
+                            <a href="${item.link}" target="_blank" class="wiki-link" onclick="event.stopPropagation();">
+                                <span>Wikipedia</span>
+                                <svg class="wiki-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M7 17L17 7"></path>
+                                    <path d="M7 7h10v10"></path>
+                                </svg>
+                            </a>
+                        </div>
+                        ` : ''}
+                    </div>
                 </div>
                 ` : ''}
                 
@@ -138,9 +160,26 @@ function renderItems(items) {
         
         el.innerHTML = html;
         
-      // 3. Smart Click Logic (Viewport-Protected Morph)
+      // 3. Smart Click Logic (Aspect-Ratio Morph)
       el.addEventListener('click', (e) => {
+        
+        // THE FIX: Gatekeeper - If any context card is open, close it and abort opening the image!
+        const openContextCards = document.querySelectorAll('.context-item.is-open');
+        if (openContextCards.length > 0) {
+            openContextCards.forEach(card => card.classList.remove('is-open'));
+            return; 
+        }
+
         const isTouchDevice = window.matchMedia("(hover: none)").matches;
+
+        if (!isTouchDevice) {
+            // DESKTOP: Native 1-click behavior
+            if (item.link) window.open(item.link, '_blank');
+            return;
+        }
+
+        // MOBILE: Clone Teleport Logic
+        if (document.querySelector('.mobile-clone')) return;
 
         if (!isTouchDevice) {
             // DESKTOP: Native 1-click behavior
@@ -153,51 +192,72 @@ function renderItems(items) {
 
         // 1. Measure original card position
         const rect = el.getBoundingClientRect();
+        const img = el.querySelector('.item-image');
 
-        // 2. Create clone
+        // 2. Calculate true expanded dimensions using natural image aspect ratio
+        let targetWidth = window.innerWidth + 2; // Start with full width + 2px bleed
+        const aspect = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 0.65;
+        let targetHeight = targetWidth * aspect;
+
+        // THE CAP: Limit height to 60% of the screen so tall images don't cover the drawer
+        const maxHeight = window.innerHeight * 0.60; 
+
+        if (targetHeight > maxHeight) {
+            targetHeight = maxHeight;
+            targetWidth = targetHeight / aspect; // Scale width down proportionally
+        }
+
+        const targetTop = (window.innerHeight - targetHeight) / 2;
+        
+        // Dynamically center horizontally (results in -1px if full width with bleed)
+        const targetLeft = (window.innerWidth - targetWidth) / 2;
+
+        // 3. Create clone & place directly over original card
         const clone = el.cloneNode(true);
         clone.className = 'timeline-item mobile-clone'; 
 
-        // 3. Measure expanded height IN-BOUNDS to prevent mobile 'vh' recalculation shifts
-        clone.style.transition = 'none';
-        clone.style.position = 'fixed';
-        clone.style.top = '0';
-        clone.style.left = '0';
-        clone.style.width = '100vw';
-        clone.style.height = 'auto';
-        clone.style.visibility = 'hidden';
-        clone.style.pointerEvents = 'none';
-        document.body.appendChild(clone);
-
-        const expandedHeight = clone.offsetHeight;
-        const expandedTop = (window.innerHeight - expandedHeight) / 2;
-
-        // 4. Snap clone directly over original card
         clone.style.left = `${rect.left}px`;
         clone.style.top = `${rect.top}px`;
         clone.style.width = `${rect.width}px`;
         clone.style.height = `${rect.height}px`;
 
+        document.body.appendChild(clone);
+
+        // Set up Description Drawer Arrow Toggle (Modern 2-Line Chevron)
+        const descToggle = clone.querySelector('.info-toggle');
+        if (descToggle) {
+            descToggle.innerHTML = `
+                <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+            `;
+            descToggle.addEventListener('click', (toggleEvent) => {
+                toggleEvent.stopPropagation(); 
+                clone.classList.toggle('desc-open');
+            });
+        }
+
         // Hide original card on timeline
         el.style.opacity = '0';
 
-        // 5. Force layout commit
+        // 4. Force reflow to lock starting coordinates
         clone.offsetHeight; 
 
-        // 6. Restore visibility & animate outward
-        clone.style.visibility = 'visible';
-        clone.style.pointerEvents = 'auto';
-        clone.style.transition = ''; 
+        // 5. Animate to explicit target coordinates
         clone.classList.add('is-expanded');
-        clone.style.left = '0px';
-        clone.style.top = `${expandedTop}px`;
-        clone.style.width = '100vw';
-        clone.style.height = `${expandedHeight}px`;
+        clone.style.left = `${targetLeft}px`; 
+        clone.style.top = `${targetTop}px`;
+        clone.style.width = `${targetWidth}px`; 
+        clone.style.height = `${targetHeight}px`;
 
-        // CLOSE LOGIC
-        clone.querySelector('.close-btn').addEventListener('click', (btnEvent) => {
-            btnEvent.stopPropagation();
-            
+        // Lock background interactions
+        document.body.classList.add('has-expanded-clone');
+
+        // UNIFIED CLOSE LOGIC
+        const closeClone = () => {
+            document.removeEventListener('click', handleOutsideTap);
+            document.body.classList.remove('has-expanded-clone');
+
             const liveRect = el.getBoundingClientRect();
             
             clone.classList.remove('is-expanded');
@@ -206,18 +266,36 @@ function renderItems(items) {
             clone.style.width = `${liveRect.width}px`;
             clone.style.height = `${liveRect.height}px`;
             
+            // THE FIX: The Mid-Air Crossfade!
+            // At 200ms, reveal the perfectly-sorted original card, and smoothly 
+            // dissolve the flying clone over top of it.
             setTimeout(() => {
                 el.style.opacity = '1';
+                clone.style.opacity = '0';
+            }, 200);
+            
+            // At 400ms, the clone is invisible, so we can delete it safely.
+            setTimeout(() => {
                 clone.remove();
             }, 400); 
+        };
+
+        // Close listeners
+        clone.querySelector('.close-btn').addEventListener('click', (btnEvent) => {
+            btnEvent.stopPropagation();
+            closeClone();
         });
 
-        // SECOND-TAP LOGIC (Open Link)
-        clone.addEventListener('click', (cloneEvent) => {
-            if (!cloneEvent.target.classList.contains('close-btn') && item.link) {
-                window.open(item.link, '_blank');
+        const handleOutsideTap = (tapEvent) => {
+            if (!clone.contains(tapEvent.target)) {
+                closeClone();
             }
-        });
+        };
+
+        setTimeout(() => {
+            document.addEventListener('click', handleOutsideTap);
+        }, 50);
+ 
     });
 
         // ==========================================
@@ -271,7 +349,6 @@ function renderContexts(contexts) {
         }
 
         const el = document.createElement('div');
-        // THE FIX: Adds a specific class if it is a single moment in time
         el.className = isPointEvent ? 'context-item point-event' : 'context-item';
         el.style.left = `${startX}px`;
         el.style.width = `${width}px`;
@@ -286,18 +363,31 @@ function renderContexts(contexts) {
             ? `<img src="${item.image}" class="card-image" alt="${item.title}">` 
             : '';
 
-        const descHTML = (item.description || item.image) 
+        // THE FIX: We build the 'X' and Wikipedia link directly into the card HTML here!
+        const descHTML = (item.description || item.image || item.link) 
             ? `<div class="context-card">
+                 <div class="context-close">&times;</div>
                  ${imgHTML}
                  <div class="card-title">${item.title}</div>
                  <div class="card-year">${dateText}</div>
                  ${item.description ? `<div class="card-desc">${item.description}</div>` : ''}
+                 ${item.link ? `
+                 <div class="wiki-link-container">
+                     <a href="${item.link}" target="_blank" class="wiki-link" onclick="event.stopPropagation();">
+                         <span>Wikipedia</span>
+                         <svg class="wiki-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M7 17L17 7"></path>
+                             <path d="M7 7h10v10"></path>
+                         </svg>
+                     </a>
+                 </div>
+                 ` : ''}
                </div>`
             : '';
 
         // 3. Build Visual Graphics (Dot vs Line+Dots)
         const visualHTML = isPointEvent 
-            ? `<div class="context-circle"></div>` // Just one dot for point events
+            ? `<div class="context-circle"></div>` 
             : `<div class="context-line"></div>
                <div class="context-dot start"></div>
                <div class="context-dot end"></div>`;
@@ -311,11 +401,25 @@ function renderContexts(contexts) {
             </div>
         `;
         
-        if (item.link) {
-            const titleEl = el.querySelector('.context-title');
-            titleEl.addEventListener('click', (e) => {
-                e.stopPropagation();
-                window.open(item.link, '_blank');
+        // THE FIX: Safe Click Logic (Replaces the old instant redirect)
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Close any other open context cards first
+            document.querySelectorAll('.context-item.is-open').forEach(openItem => {
+                if (openItem !== el) openItem.classList.remove('is-open');
+            });
+            
+            // Open this one
+            el.classList.add('is-open');
+        });
+
+        // Close on 'X' tap
+        const closeBtn = el.querySelector('.context-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                el.classList.remove('is-open');
             });
         }
         
@@ -434,12 +538,14 @@ function updateTransform() {
 
 // --- 6. PAN LOGIC ---
 viewport.addEventListener('mousedown', (e) => {
+    if (document.body.classList.contains('has-expanded-clone')) return; // GATEKEEPER
+    
     isDragging = true;
     startX = e.clientX - targetTranslateX;
 });
 
 window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
+    if (!isDragging || document.body.classList.contains('has-expanded-clone')) return; // GATEKEEPER
     
     let newX = e.clientX - startX;
     
@@ -458,7 +564,6 @@ window.addEventListener('mousemove', (e) => {
         startX = e.clientX - newX; 
     }
     
-    // Instantly snap both target and actual coordinates so dragging feels snappy!
     targetTranslateX = newX;
     translateX = targetTranslateX; 
     
@@ -468,34 +573,29 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mouseup', () => isDragging = false);
 window.addEventListener('mouseleave', () => isDragging = false);
 
-
 // --- MOBILE TOUCH LOGIC (PAN & ZOOM) ---
-// Pan State
 let lastTouchTime = 0;
 let lastTouchXPos = 0;
 let velocityX = 0;
-let wasZooming = false; // THE FIX: Prevents pan snapping after a zoom
+let wasZooming = false; 
 
-// Zoom State
 let initialPinchDistance = null;
 let initialScale = 1;
 
 viewport.addEventListener('touchstart', (e) => {
+    if (document.body.classList.contains('has-expanded-clone')) return; // GATEKEEPER
+    
     if (e.touches.length === 1) {
-        // Only allow a new pan if we aren't lingering from a previous zoom
         if (!wasZooming) {
             isDragging = true;
             startX = e.touches[0].clientX - targetTranslateX;
-            
             lastTouchXPos = e.touches[0].clientX;
             lastTouchTime = Date.now();
             velocityX = 0;
         }
     } else if (e.touches.length === 2) {
-        // 2-FINGER PINCH INITIATION
         isDragging = false; 
-        wasZooming = true; // Lock panning
-        
+        wasZooming = true; 
         initialPinchDistance = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
@@ -505,8 +605,10 @@ viewport.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 window.addEventListener('touchmove', (e) => {
+    if (document.body.classList.contains('has-expanded-clone')) return; // GATEKEEPER
+    
     if (e.touches.length === 1 && isDragging) {
-        // --- 1-FINGER PANNING ---
+        // ... (Keep your exact existing 1-finger panning math here) ...
         let currentClientX = e.touches[0].clientX;
         let newX = currentClientX - startX;
         
@@ -537,7 +639,7 @@ window.addEventListener('touchmove', (e) => {
         updateTransform();
         
     } else if (e.touches.length === 2 && initialPinchDistance) {
-        // --- 2-FINGER ZOOMING ---
+        // ... (Keep your exact existing 2-finger zooming math here) ...
         e.preventDefault(); 
         
         const currentDistance = Math.hypot(
@@ -557,7 +659,6 @@ window.addEventListener('touchmove', (e) => {
         const trackWidth = (maxYear - minYear) * pixelsPerYear;
         const scaledWidth = trackWidth * targetScale;
         const padding = window.innerWidth / 2;
-
         const minX = -(scaledWidth - padding);
         const maxX = padding;
 
@@ -566,16 +667,17 @@ window.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 window.addEventListener('touchend', (e) => {
+    if (document.body.classList.contains('has-expanded-clone')) return; // GATEKEEPER
+    
+    // ... (Keep your exact existing touchend momentum release math here) ...
     if (e.touches.length < 2) {
         initialPinchDistance = null;
     }
     
     if (e.touches.length === 0) {
-        // THE FIX: Unlock panning only when all fingers leave the glass
         wasZooming = false; 
         
         if (isDragging) {
-            // --- MOMENTUM RELEASE ---
             isDragging = false;
             
             if (Date.now() - lastTouchTime > touchCancelTimer) {
@@ -595,7 +697,6 @@ window.addEventListener('touchend', (e) => {
                     const maxX = padding;
                     
                     targetTranslateX = Math.max(minX, Math.min(maxX, targetTranslateX));
-                    
                     translateX = targetTranslateX;
                     updateTransform();
                     
@@ -609,8 +710,6 @@ window.addEventListener('touchend', (e) => {
             }
         }
     } else if (e.touches.length === 1) {
-        // THE FIX: Do nothing. Let the 1 remaining finger rest harmlessly 
-        // while the render loop finishes its smooth glide.
         isDragging = false; 
     }
 });
@@ -677,7 +776,10 @@ updateTransform();
 // Tap empty canvas to close active items on mobile
 viewport.addEventListener('click', (e) => {
     if (!e.target.closest('.timeline-item') && !e.target.closest('.context-item')) {
-        document.querySelectorAll('.timeline-item.is-active, .context-item.is-active')
-                .forEach(n => n.classList.remove('is-active'));
+        document.querySelectorAll('.timeline-item.is-active, .context-item.is-active, .context-item.is-open')
+                .forEach(n => {
+                    n.classList.remove('is-active');
+                    n.classList.remove('is-open');
+                });
     }
 });

@@ -21,6 +21,18 @@ body, html {
     touch-action: none;
 }
 
+/* =========================================
+   MOBILE ONLY: True Viewport Height
+   ========================================= */
+   @media (hover: none) {
+    body, html {
+        /* Replaces 100vh with the JS locked height so the bottom toolbar 
+           doesn't fake the center point, placing the track in the TRUE optical center */
+        height: var(--app-height, 100dvh);
+    }
+}
+
+
 /* The Viewport (What the camera sees) */
 #viewport {
     width: 100%;
@@ -89,10 +101,14 @@ body, html {
     transform: scale(calc(var(--inv-scale, 1) * var(--priority-scale, 1))); 
     scale: 1;
     
-    /* THE TWEAK: Changed scale from 0.2s to 0.4s for a slower, richer pop! */
+    /* THE INTENTIONAL CHOREOGRAPHY:
+       - 'scale' stays at 0.4s for a snappy, responsive mouse hover.
+       - 'top' and 'left' are extended to 0.85s with a highly fluid easing curve.
+         Now, when they un-stack, they look like they are floating and settling 
+         deliberately like physical objects! */
     transition: scale 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-                left 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+                top 0.85s cubic-bezier(0.19, 1, 0.22, 1),
+                left 0.85s cubic-bezier(0.19, 1, 0.22, 1);
     
     will-change: transform, scale, top, left;
     backface-visibility: hidden;
@@ -120,10 +136,6 @@ body, html {
         display: block;
     }
 
-    /* 4. RESTORED: Drawer ONLY opens when hovering the text area, not the image! */
-    .item-info:hover .info-desc-box {
-        transform: translateY(0); 
-    }
 }
 
 /* =========================================
@@ -162,13 +174,22 @@ body, html {
     display: none; 
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
-    font-size: 1.2rem;
+    
+    /* Generous touch target area so it's easy to tap */
+    width: 44px;
+    height: 44px;
+    
+    /* Beautiful plain X styling */
+    font-size: 2.2rem;
+    font-weight: 300; 
     line-height: 1;
-    color: rgba(255, 255, 255, 0.6);
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 50%;
+    color: #ffffff;
+    background: transparent; /* Removed the circle */
+    border-radius: 0;
+    
+    /* Keeps it readable over light/white images */
+    text-shadow: none;
+    
     cursor: pointer;
     flex-shrink: 0;
     margin-left: auto;
@@ -185,13 +206,7 @@ body, html {
     /* Grayscale and opacity have been removed! */
 }
 
-/* (You can completely delete the .timeline-item:hover .item-image block!) */
 
-/* 4. Hover Image - Return to Full Color and Solid */
-.timeline-item:hover .item-image {
-    filter: grayscale(0%);
-    opacity: 1;
-}
 
 /* 5. THE TEXT CONTAINER */
 .item-info {
@@ -223,10 +238,6 @@ body, html {
     transform-origin: bottom left;
 }
 
-/* SHOW TEXT ON HOVER */
-.timeline-item:hover .item-info {
-    display: block;
-}
 
 /* --- NEW FLEXBOX LAYOUT --- */
 .info-header {
@@ -272,12 +283,15 @@ body, html {
 .desc-mask {
     position: absolute;
     
-    /* THE FIX: Pulled up by 1 pixel to overlap the image and kill the sub-pixel gap! */
+    /* Pulled up by 1 pixel to overlap the image and kill the sub-pixel gap! */
     top: calc(100% - 1px); 
     
     left: 0;
     width: 100%;
     overflow: hidden; 
+    
+    /* THE FIX: Makes the empty mask transparent to taps, letting them fall through to the background! */
+    pointer-events: none; 
 }
 
 .info-desc-box {
@@ -292,6 +306,9 @@ body, html {
     /* Box starts pushed 100% up, which hides it entirely within the mask's overflow */
     transform: translateY(-100%); 
     transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); 
+    
+    /* THE FIX: Re-enables taps for the actual text and Wikipedia link when the box is open */
+    pointer-events: auto;
 }
 
 /* THE FIX: Trigger the drawer whenever the mouse is ANYWHERE in the entire item-info container! */
@@ -310,9 +327,10 @@ body, html {
     pointer-events: none;
     z-index: 5;
     
+    /* THE FIX: Reduced +40px down to +15px to pull the years closer to the top edge */
     transform: translate(
         calc(8px * var(--inv-scale, 1)), 
-        calc(-50vh * var(--inv-scale, 1) + 40px * var(--inv-scale, 1))
+        calc(calc(-0.5 * var(--app-height, 100vh)) * var(--inv-scale, 1) + 15px * var(--inv-scale, 1))
     ) scale(var(--inv-scale, 1));
     
     transform-origin: top left;
@@ -323,21 +341,26 @@ body, html {
 
 #world-events-track {
     position: absolute;
-    /* Multiplies the gap by the inverse scale so it NEVER gets squished by zooming! */
-    top: calc(50% - (clamp(280px, 35vh, 450px) * var(--inv-scale, 1))); 
+    top: calc(50% - (clamp(280px, calc(0.35 * var(--app-height, 100vh)), 450px) * var(--inv-scale, 1))); 
     left: 0;
     width: 100%;
-    z-index: 99990 !important;
+    
+    /* THE FIX: Set to auto! This destroys the "glass ceiling" 
+       and lets the Era hover cards use their massive 99999 z-index! */
+    z-index: auto !important;
+    
     pointer-events: none;
 }
 
 #cultural-eras-track {
     position: absolute;
-    /* Pushes downward, protected from the zoom scale */
-    top: calc(50% + (clamp(280px, 35vh, 450px) * var(--inv-scale, 1)));
+    top: calc(50% + (clamp(280px, calc(0.35 * var(--app-height, 100vh)), 450px) * var(--inv-scale, 1)));
     left: 0;
     width: 100%;
-    z-index: 99990 !important;
+    
+    /* THE FIX: Set to auto! */
+    z-index: auto !important;
+    
     pointer-events: none;
 }
 
@@ -505,6 +528,33 @@ body, html {
     z-index: 99999 !important;
 }
 
+/* Removes the old hover dependency and uses JS clicks */
+.context-item.is-open .context-card {
+    display: block; /* Or opacity: 1, visibility: visible (whichever you use) */
+}
+
+/* Position the 'X' inside the pop-up card */
+.context-close {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    z-index: 10;
+}
+
+.context-close:hover,
+.context-close:active {
+    color: #ffffff;
+}
+
+/* Make sure the text label still looks clickable */
+.context-title {
+    cursor: pointer;
+}
+
 /* TRACK-SPECIFIC ALIGNMENT: Keeps cards inside screen boundaries */
 #world-events-track .context-card {
     top: 0;
@@ -564,6 +614,41 @@ body, html {
     color: #d0d0d0;
 }
 
+/* Disable background timeline interactions when a clone card is expanded */
+body.has-expanded-clone #track {
+    pointer-events: none !important;
+}
+
+/* =========================================
+   MOBILE CLONE: Background Dimming Overlay
+   ========================================= */
+   body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    /* A deep, cinematic dark overlay */
+    background-color: rgba(0, 0, 0, 0.75); 
+    
+    /* Sits securely behind the mobile-clone's 999999 */
+    z-index: 999990; 
+    
+    opacity: 0;
+    pointer-events: none;
+    
+    /* Matches the exact easing curve and speed of the image expansion */
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Triggers the fade-in automatically when an image is opened */
+body.has-expanded-clone::before {
+    opacity: 1;
+    pointer-events: auto; 
+}
+
 /* =========================================
    MOBILE ONLY: The Clone Teleport
    ========================================= */
@@ -576,11 +661,13 @@ body, html {
     translate: 0 0 !important;
     transform: none !important;
     
-    /* Hardware-accelerated pixel transitions */
+    /* THE FIX: Added the opacity transition at the very end! */
     transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
                 top 0.4s cubic-bezier(0.22, 1, 0.36, 1),
                 width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+                height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.2s ease;
+                
     pointer-events: auto;
     overflow: hidden;
 }
@@ -596,24 +683,116 @@ body, html {
 .mobile-clone .item-info {
     display: block;
     width: 100%;
-    transform: scale(1);
+    
+    /* THE FIX: Changed 'scale(1)' to 'none'. 
+       This unlocks the cage, letting the X jump to the top of the image! */
+    transform: none; 
+    
     opacity: 0;
-    transition: opacity 0.15s ease; /* Fast fade out on collapse */
+    transition: opacity 0.15s ease;
+}
+
+/* Allow the description drawer to slide out past the bottom edge of the image */
+.mobile-clone.is-expanded {
+    overflow: visible !important;
 }
 
 .mobile-clone.is-expanded .item-info {
     opacity: 1;
-    transition: opacity 0.3s ease 0.1s; /* Smooth fade in after expansion */
+    
+    /* THE FIX: Removed the 0.1s delay and shortened the duration to 0.2s 
+       so the gradient and text appear instantly! */
+    transition: opacity 0.2s ease;
 }
 
-.mobile-clone.is-expanded .info-desc-box {
-    transform: translateY(0); 
-}
 
 .mobile-clone.is-expanded .close-btn {
     display: flex; 
+    
+    /* THE FIX: Breaks out of the text layout and pins to the top right */
+    position: fixed;
+    top: 3px;
+    right: 3px;
+    
+    /* Resets the flex margin from the base class */
+    margin: 0; 
+    z-index: 9999999;
 }
 
-.mobile-clone.is-expanded .info-toggle {
-    display: none; 
+
+/* =========================================
+   MOBILE CLONE: Drawer Arrow & Toggle
+   ========================================= */
+   .mobile-clone .info-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    
+    /* THE FIX: Changed from '4px' to this. 
+       (Top: 4px, Right: 4px, Bottom: 0px, Left: 4px) 
+       This kills the bottom cushion and drops the arrow down! */
+    padding: 4px 4px 0px 4px;
+    
+    cursor: pointer;
+}
+
+/* 1. Force it closed by default on mobile, ignoring sticky hovers! */
+.mobile-clone .info-desc-box {
+    transform: translateY(-100%) !important;
+}
+
+/* 2. Slide the description box down ONLY when .desc-open is active */
+.mobile-clone.desc-open .info-desc-box {
+    transform: translateY(0) !important;
+}
+
+/* Chevron icon sizing & smooth rotation */
+.mobile-clone .chevron-icon {
+    width: 16px;
+    height: 16px;
+    color: rgba(255, 255, 255, 0.85);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Flip chevron 180deg when the drawer is open */
+.mobile-clone.desc-open .chevron-icon {
+    transform: rotate(180deg);
+}
+/* =========================================
+   DESCRIPTION DRAWER: Minimal Text Link
+   ========================================= */
+.wiki-link-container {
+    display: flex;
+    justify-content: flex-end; /* Align right */
+    margin-top: 10px;
+}
+
+.wiki-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.wiki-icon {
+    width: 10px;
+    height: 10px;
+    stroke-width: 2.2;
+    transition: transform 0.2s ease;
+}
+
+.wiki-link:hover,
+.wiki-link:active {
+    color: #ffffff;
+}
+
+.wiki-link:hover .wiki-icon,
+.wiki-link:active .wiki-icon {
+    transform: translate(1px, -1px); /* Subtle dynamic nudge on tap/hover */
 }
