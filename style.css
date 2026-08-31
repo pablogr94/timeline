@@ -1,11 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;700;800&display=swap');
 
+:root {
+    /* Desktop size */
+    --base-item-height: 100px;
+}
+
+/* Mobile size */
+@media (max-width: 768px) {
+    :root {
+        --base-item-height: 100px;
+    }
+}
+
 /* Prevent unwanted text highlighting when dragging/panning */
 * {
     -webkit-user-select: none; /* Safari / Chrome */
     -moz-user-select: none;    /* Firefox */
     -ms-user-select: none;     /* IE 10+ / Edge */
     user-select: none;         /* Standard */
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* The Global Reset & Canvas Aesthetic */
@@ -87,10 +100,34 @@ body, html {
     transform: translate(0, -50%) scale(var(--inv-scale, 1)); 
 }
 
+/* --- NEW: Single Year Grid Lines --- */
+.single-year-line {
+    position: absolute;
+    top: 0; 
+    height: 100000px; 
+    width: 0;
+    
+    /* A softer, finer dotted line so it doesn't overpower the decades */
+    border-left: 1px dotted rgba(0, 0, 0, 0.15); 
+    z-index: 0; 
+    pointer-events: none;
+    transform: translate(0, -50%) scale(var(--inv-scale, 1)); 
+    
+    /* Fades in automatically based on JS zoom */
+    opacity: var(--detail-opacity, 0);
+}
+
+/* Make single year numbers softer than decades */
+.single-year-label {
+    opacity: var(--detail-opacity, 0);
+    color: rgba(255, 255, 255, 0.7); /* Semi-transparent white to stay subtle */
+}
+
 /* 1. Base card */
 .timeline-item {
     position: absolute;
-    height: 125px; 
+    --active-hover-scale: 1;
+    height: calc(var(--base-item-height) * var(--aspect-boost, 1));
     width: fit-content;      
     background-color: #2a2a2a; 
     box-sizing: border-box;
@@ -98,7 +135,7 @@ body, html {
     overflow: visible; 
     
     translate: -50% -50%;
-    transform: scale(calc(var(--inv-scale, 1) * var(--priority-scale, 1))); 
+    transform: scale(calc(var(--inv-scale, 1) * var(--priority-scale, 1) * var(--item-zoom, 1)));
     scale: 1;
     
     /* THE INTENTIONAL CHOREOGRAPHY:
@@ -114,6 +151,7 @@ body, html {
     backface-visibility: hidden;
 }
 
+
 /* =========================================
    DESKTOP ONLY: Cinematic Mouse Hover
    ========================================= */
@@ -122,7 +160,8 @@ body, html {
     .timeline-item:hover {
         z-index: 1000 !important; 
         cursor: pointer;
-        scale: calc(3 / var(--priority-scale, 1)); 
+        --active-hover-scale: max(1, calc(3 / (var(--priority-scale, 1) * var(--item-zoom, 1))));
+        scale: var(--active-hover-scale);
     }
 
     /* 2. Image restore */
@@ -144,7 +183,8 @@ body, html {
 @media (hover: none) {
     .timeline-item.is-active {
         z-index: 1000 !important; 
-        scale: calc(5 / var(--priority-scale, 1)); /* Aggressive 5x scale for mobile */
+        --active-hover-scale: max(1, calc(5 / (var(--priority-scale, 1) * var(--item-zoom, 1))));
+        scale: var(--active-hover-scale);
     }
 
     .timeline-item.is-active .item-image {
@@ -198,7 +238,7 @@ body, html {
 
 /* 3. Base Image - Clean, Full Color, 100% Opacity */
 .item-image {
-    height: 125px;
+    height: calc(var(--base-item-height) * var(--aspect-boost, 1));
     width: auto;             
     display: block;          
     object-fit: cover; 
@@ -213,7 +253,8 @@ body, html {
     position: absolute;
     bottom: 0; 
     left: 0;
-    width: 300%; 
+    --total-visual-scale: calc(var(--priority-scale, 1) * var(--item-zoom, 1) * var(--active-hover-scale, 1));
+    width: calc(100% * var(--total-visual-scale));
     box-sizing: border-box; 
     padding: 14px 10px 10px 10px; 
     color: #ffffff; 
@@ -234,7 +275,7 @@ body, html {
     pointer-events: auto; 
     text-align: left;
     z-index: 5; 
-    transform: scale(0.333); 
+    transform: scale(calc(1 / var(--total-visual-scale)));
     transform-origin: bottom left;
 }
 
@@ -245,6 +286,7 @@ body, html {
     justify-content: space-between;
     align-items: flex-end;
     gap: 8px; /* Adds a clean safety gap between the title and +info */
+    cursor: pointer;
 }
 
 .info-meta {
@@ -500,6 +542,7 @@ body, html {
 
 /* --- HOVER CARD POPUPS (Dynamic Vertical Height) --- */
 
+/* 1. Base Card Styling */
 .context-card {
     position: absolute;
     left: calc(100% + 12px);
@@ -516,24 +559,49 @@ body, html {
     white-space: normal;
     text-align: left;
     
+    /* Hidden state */
     opacity: 0;
     visibility: hidden;
-    
-    /* THE TWEAK: Pulled back to -20px so it travels a much greater distance! */
     transform: translateX(-20px);
+    pointer-events: none;
+    z-index: 99999 !important;
     
     /* Leave transition (No delay) */
     transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-    pointer-events: none;
-    z-index: 99999 !important;
 }
 
-/* Removes the old hover dependency and uses JS clicks */
+/* 2. Invisible Hover Bridge (Prevents hover drop-off over the 12px gap) */
+.context-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -20px; 
+    width: 20px;
+    height: 100%;
+}
+
+/* 3. Unified Active State (Hover + Mobile Tap) */
+.context-title:hover .context-card,
 .context-item.is-open .context-card {
-    display: block; /* Or opacity: 1, visibility: visible (whichever you use) */
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    
+    /* Restores clickability for Wikipedia links inside the card */
+    pointer-events: auto; 
+    
+    /* Snappy entrance transition */
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
+                transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
+                visibility 0s 0.1s;
 }
 
-/* Position the 'X' inside the pop-up card */
+/* Make sure the text label looks clickable */
+.context-title {
+    cursor: pointer;
+}
+
+/* 4. Pop-up Inner Elements Styling */
 .context-close {
     position: absolute;
     top: 5px;
@@ -550,44 +618,13 @@ body, html {
     color: #ffffff;
 }
 
-/* Make sure the text label still looks clickable */
-.context-title {
-    cursor: pointer;
-}
-
-/* TRACK-SPECIFIC ALIGNMENT: Keeps cards inside screen boundaries */
-#world-events-track .context-card {
-    top: 0;
-    bottom: auto;
-}
-
-#cultural-eras-track .context-card {
-    bottom: 0;
-    top: auto;
-}
-
-/* Hover trigger */
-.context-title:hover .context-card {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(0);
-    
-    /* THE TWEAK: Reduced the delay to 0.1s for a snappier, yet protected feel */
-    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
-                transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
-                visibility 0s 0.1s;
-}
-
 /* Card Thumbnail Image (Edge-to-Edge & Uncropped) */
 .card-image {
-    /* THE FIX: Pulls the image flush against the top, left, and right borders of the card */
     width: calc(100% + 28px); 
     margin-top: -12px;
     margin-left: -14px;
     margin-right: -14px;
     margin-bottom: 10px;
-    
-    /* THE FIX: Natural aspect ratio so the image NEVER gets cropped */
     height: auto; 
     display: block;
 }
@@ -614,7 +651,18 @@ body, html {
     color: #d0d0d0;
 }
 
-/* Disable background timeline interactions when a clone card is expanded */
+/* 5. Track-Specific Vertical Alignment */
+#world-events-track .context-card {
+    top: 0;
+    bottom: auto;
+}
+
+#cultural-eras-track .context-card {
+    bottom: 0;
+    top: auto;
+}
+
+/* 6. Global Interaction Locks */
 body.has-expanded-clone #track {
     pointer-events: none !important;
 }
@@ -711,8 +759,8 @@ body.has-expanded-clone::before {
     
     /* THE FIX: Breaks out of the text layout and pins to the top right */
     position: fixed;
-    top: 3px;
-    right: 3px;
+    top: 0px;
+    right: 0px;
     
     /* Resets the flex margin from the base class */
     margin: 0; 
@@ -739,6 +787,10 @@ body.has-expanded-clone::before {
 /* 1. Force it closed by default on mobile, ignoring sticky hovers! */
 .mobile-clone .info-desc-box {
     transform: translateY(-100%) !important;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+    padding-top: 16px !important;
 }
 
 /* 2. Slide the description box down ONLY when .desc-open is active */
@@ -761,10 +813,25 @@ body.has-expanded-clone::before {
 /* =========================================
    DESCRIPTION DRAWER: Minimal Text Link
    ========================================= */
-.wiki-link-container {
+   .wiki-link-container {
     display: flex;
-    justify-content: flex-end; /* Align right */
-    margin-top: 10px;
+    /* THE FIX: Pushes attribution to the left and Wikipedia to the right */
+    justify-content: space-between; 
+    align-items: center;
+    margin-top: 20px;
+}
+
+/* Faint, minimal attribution styling */
+.attribution-link {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.35);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.attribution-link:hover,
+.attribution-link:active {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .wiki-link {
@@ -792,7 +859,3 @@ body.has-expanded-clone::before {
     color: #ffffff;
 }
 
-.wiki-link:hover .wiki-icon,
-.wiki-link:active .wiki-icon {
-    transform: translate(1px, -1px); /* Subtle dynamic nudge on tap/hover */
-}
