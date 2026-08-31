@@ -8,10 +8,10 @@ window.addEventListener('orientationchange', setStableAppHeight);
 // --- TIMELINE CONSTANTS ---
 const minYear = 1800;
 const maxYear = 2100;
-const pixelsPerYear = 100; 
+const pixelsPerYear = 500; 
 
 // Base overlap steps at 1x zoom
-const verticalOffsetStep = 20;    // Increased from 70 to peek out vertically
+const verticalOffsetStep = 50;    // Increased from 70 to peek out vertically
 const horizontalOffsetStep = 20;   // Increased from 22 to fan out horizontally
 const minScreenGap = 120;
 
@@ -27,8 +27,8 @@ const touchMinFlickSpeed = 0.1;     // Minimum velocity to trigger momentum
 const touchStopThreshold = 0.05;    // When the sliding animation goes to sleep
 
 // --- INTERACTION STATE ---
-const minZoomScale = 0.1;       // The furthest you can zoom out
-const itemZoomMultiplier = 1;  // How aggressively images grow as you zoom in (0.4 = subtle, 1.0 = massive)
+const minZoomScale = 0.02;       // The furthest you can zoom out
+const itemZoomMultiplier = 1.5;  // How aggressively images grow as you zoom in (0.4 = subtle, 1.0 = massive)
 
 let targetScale = minZoomScale; // Where the zoom WANTS to be
 let scale = targetScale;        // Where the zoom ACTUALLY is
