@@ -2,7 +2,7 @@
 
 :root {
     /* Desktop size */
-    --base-item-height: 100px;
+    --base-item-height: 75px;
 }
 
 /* Mobile size */
@@ -80,40 +80,38 @@ body, html {
 
 .century-line {
     position: absolute;
-    top: 0; 
-    height: 100000px; 
+    top: -100vh; 
+    height: 200vh; 
     width: 0;
     border-left: 1px dashed rgba(0, 0, 0, 0.3); 
     z-index: 1;
     pointer-events: none;
-    transform: translate(0, -50%) scale(var(--inv-scale, 1)); 
+    
+    /* THE FIX: scaleX keeps the width thin but leaves the height dynamic! */
+    transform: scaleX(var(--inv-scale, 1)); 
 }
 
 .decade-line {
     position: absolute;
-    top: 0; 
-    height: 100000px; 
+    top: -100vh; 
+    height: 200vh; 
     width: 0;
     border-left: 1px dashed rgba(0, 0, 0, 0.1); 
     z-index: 0; 
     pointer-events: none;
-    transform: translate(0, -50%) scale(var(--inv-scale, 1)); 
+    transform: scaleX(var(--inv-scale, 1)); 
 }
 
 /* --- NEW: Single Year Grid Lines --- */
 .single-year-line {
     position: absolute;
-    top: 0; 
-    height: 100000px; 
+    top: -100vh; 
+    height: 200vh; 
     width: 0;
-    
-    /* A softer, finer dotted line so it doesn't overpower the decades */
     border-left: 1px dotted rgba(0, 0, 0, 0.15); 
     z-index: 0; 
     pointer-events: none;
-    transform: translate(0, -50%) scale(var(--inv-scale, 1)); 
-    
-    /* Fades in automatically based on JS zoom */
+    transform: scaleX(var(--inv-scale, 1)); 
     opacity: var(--detail-opacity, 0);
 }
 
