@@ -79,10 +79,14 @@ async function loadData() {
     }
 }
 
-// --- 2. DRAW TIMELINE GRID (Centuries, Decades, & Single Years) ---
+// --- 2. DRAW TIMELINE GRID (Centuries & Decades Only) ---
 function renderGridLines() {
-    // THE FIX: The loop now runs for EVERY year, not just modulo 10
     for (let year = minYear; year <= maxYear; year++) {
+        
+        // THE QUICK DISABLE: If the year doesn't end in 0, skip it entirely!
+        // This stops thousands of DOM elements from being created.
+        if (year % 10 !== 0) continue; 
+        
         const xPos = (year - minYear) * pixelsPerYear;
         
         // Draw the line
@@ -95,16 +99,12 @@ function renderGridLines() {
         label.style.left = `${xPos}px`;
         label.innerText = year;
         
-        // Apply classes and weights based on importance
+        // Apply classes
         if (year % 100 === 0) {
             line.className = 'century-line';
             label.style.fontWeight = '700'; 
-        } else if (year % 10 === 0) {
-            line.className = 'decade-line';
         } else {
-            // NEW: Setup the single years with their specific classes
-            line.className = 'single-year-line';
-            label.classList.add('single-year-label');
+            line.className = 'decade-line';
         }
         
         track.appendChild(line);
