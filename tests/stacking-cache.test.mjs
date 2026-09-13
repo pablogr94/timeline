@@ -433,6 +433,7 @@ test('render reset removes previously generated timeline and context elements', 
     ];
     vm.runInContext(`
         track.querySelectorAll = () => testNodes;
+        gridTrack.replaceChildren = () => { globalThis.gridTrackCleared = true; };
         worldEventsTrack.replaceChildren = () => { globalThis.worldTrackCleared = true; };
         culturalErasTrack.replaceChildren = () => { globalThis.cultureTrackCleared = true; };
         loadedItems = [{}];
@@ -441,6 +442,7 @@ test('render reset removes previously generated timeline and context elements', 
     `, context);
 
     assert.equal(removed, 3);
+    assert.equal(context.gridTrackCleared, true);
     assert.equal(context.worldTrackCleared, true);
     assert.equal(context.cultureTrackCleared, true);
     assert.equal(vm.runInContext('loadedItems.length', context), 0);
@@ -597,15 +599,20 @@ test('standard thumbnails preload before their reveal threshold', () => {
     assert.equal(imageElement.src, 'thumbnail.jpg');
 });
 
-test('grid lines keep a full viewport-crossing height at every zoom level', () => {
+test('grid lines keep fixed viewport height outside vertical camera scaling', () => {
+    const script = fs.readFileSync(new URL('../script.js', import.meta.url), 'utf8');
     const css = fs.readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+
+    assert.match(script, /const gridTrack = document\.getElementById\('grid-track'\)/);
+    assert.match(script, /gridTrack\.appendChild\(line\)/);
+    assert.match(script, /gridTrack\.style\.transform = `translate\(\$\{translateX}px, \$\{translateY}px\) scaleX\(\$\{scale\}\)`/);
 
     for (const selector of ['century-line', 'half-century-line', 'decade-line', 'single-year-line']) {
         const block = css.match(new RegExp(`\\.${selector}\\s*\\{([^}]*)\\}`, 's'))?.[1] || '';
-        assert.match(block, /top:\s*calc\(-100vh \* var\(--inv-scale, 1\)\)/);
-        assert.match(block, /height:\s*calc\(200vh \* var\(--inv-scale, 1\)\)/);
+        assert.match(block, /top:\s*-100vh/);
+        assert.match(block, /height:\s*200vh/);
+        assert.doesNotMatch(block, /calc\([^;]*--inv-scale/);
     }
-
 });
 
 test('maximum zoom-out shows 50-year marks before decade detail', () => {

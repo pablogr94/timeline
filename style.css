@@ -134,6 +134,7 @@ body, html {
     outline: none;
 }
 
+#grid-track,
 #track {
     position: absolute;
     top: 50%; 
@@ -141,6 +142,15 @@ body, html {
     width: 30000px;
     height: 0; 
     transform-origin: 0 0; 
+}
+
+#grid-track {
+    z-index: 0;
+    pointer-events: none;
+}
+
+#track {
+    z-index: 1;
 }
 
 #center-line {
@@ -157,21 +167,21 @@ body, html {
 
 .century-line {
     position: absolute;
-    top: calc(-100vh * var(--inv-scale, 1));
-    height: calc(200vh * var(--inv-scale, 1));
+    top: -100vh;
+    height: 200vh;
     width: 0;
     border-left: 1px solid var(--century-grid-color);
     z-index: 1;
     pointer-events: none;
     
-    /* Counter-scale the border width; top/height above counter-scale the parent camera. */
+    /* The grid parent scales horizontally only, so viewport height stays GPU-safe. */
     transform: scaleX(var(--inv-scale, 1)); 
 }
 
 .half-century-line {
     position: absolute;
-    top: calc(-100vh * var(--inv-scale, 1));
-    height: calc(200vh * var(--inv-scale, 1));
+    top: -100vh;
+    height: 200vh;
     width: 0;
     border-left: 1px solid var(--half-century-grid-color);
     z-index: 1;
@@ -181,8 +191,8 @@ body, html {
 
 .decade-line {
     position: absolute;
-    top: calc(-100vh * var(--inv-scale, 1));
-    height: calc(200vh * var(--inv-scale, 1));
+    top: -100vh;
+    height: 200vh;
     width: 0;
     border-left: 1px dashed var(--decade-grid-color);
     z-index: 0; 
@@ -194,8 +204,8 @@ body, html {
 /* --- NEW: Single Year Grid Lines --- */
 .single-year-line {
     position: absolute;
-    top: calc(-100vh * var(--inv-scale, 1));
-    height: calc(200vh * var(--inv-scale, 1));
+    top: -100vh;
+    height: 200vh;
     width: 0;
     border-left: 1px dotted var(--annual-grid-color);
     z-index: 0; 

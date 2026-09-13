@@ -47,11 +47,17 @@ async function runDesktop(connection) {
     const decadeGrid = await evaluate(connection, `(() => {
         const lines = document.querySelectorAll('.decade-line');
         const halfCenturyLines = document.querySelectorAll('.half-century-line');
-        return { count: lines.length, halfCenturyCount: halfCenturyLines.length, height: lines[0].getBoundingClientRect().height };
+        return {
+            count: lines.length,
+            halfCenturyCount: halfCenturyLines.length,
+            height: lines[0].getBoundingClientRect().height,
+            layoutHeight: Number.parseFloat(getComputedStyle(lines[0]).height),
+        };
     })()`);
     assert.equal(decadeGrid.count, 24, '10-year detail lines should remain rendered for LOD');
     assert.equal(decadeGrid.halfCenturyCount, 3, '50-year overview lines should always be rendered');
     assert.ok(decadeGrid.height >= 1600, 'decade grid lines should cross the full desktop viewport');
+    assert.ok(decadeGrid.layoutHeight <= 1700, 'grid layout height should remain below GPU-unsafe counter-scaled sizes');
 
     const mediaStates = await evaluate(connection, `(() => {
         const placeholders = [...document.querySelectorAll('.timeline-item .is-image-missing')];

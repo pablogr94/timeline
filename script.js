@@ -191,6 +191,7 @@ let imageSettlementQueued = false;
 const pendingImageSettlements = new Set();
 
 const viewport = document.getElementById('viewport');
+const gridTrack = document.getElementById('grid-track');
 const track = document.getElementById('track');
 
 const worldEventsTrack = document.createElement('div');
@@ -213,8 +214,9 @@ function setAppStatus(message, { error = false, retry = false, hidden = false } 
 }
 
 function clearRenderedTimeline() {
-    track.querySelectorAll('.timeline-item, .century-line, .half-century-line, .decade-line, .single-year-line, .year-label')
+    track.querySelectorAll('.timeline-item, .year-label')
         .forEach(element => element.remove());
+    gridTrack.replaceChildren();
     worldEventsTrack.replaceChildren();
     culturalErasTrack.replaceChildren();
     loadedItems = [];
@@ -288,7 +290,7 @@ function renderGridLines() {
             label.className = 'year-label single-year-label';
         }
         
-        track.appendChild(line);
+        gridTrack.appendChild(line);
         track.appendChild(label);
     }
 }
@@ -313,7 +315,9 @@ function buildTimelineMedia(item) {
 
 // --- 3. RENDER ITEMS ---
 function renderItems(items) {
-    track.style.width = `${(maxYear - minYear) * pixelsPerYear}px`;
+    const timelineWidth = `${(maxYear - minYear) * pixelsPerYear}px`;
+    track.style.width = timelineWidth;
+    gridTrack.style.width = timelineWidth;
     items.forEach(item => {
         const xPos = (item.year - minYear) * pixelsPerYear;
 
@@ -848,9 +852,9 @@ function updateLevelOfDetail() {
     const annualLineOpacity = getLodProgress(annualLineFadeStartScale, annualLineFullScale);
     const annualLabelOpacity = getLodProgress(annualLabelFadeStartScale, annualLabelFullScale);
 
-    track.style.setProperty('--decade-grid-opacity', decadeOpacity);
+    gridTrack.style.setProperty('--decade-grid-opacity', decadeOpacity);
+    gridTrack.style.setProperty('--annual-grid-opacity', annualLineOpacity);
     track.style.setProperty('--decade-label-opacity', decadeOpacity);
-    track.style.setProperty('--annual-grid-opacity', annualLineOpacity);
     track.style.setProperty('--annual-label-opacity', annualLabelOpacity);
 
     loadedItems.forEach(item => {
@@ -889,7 +893,9 @@ function updateViewportCulling() {
 // --- 5. UPDATE SCREEN ---
 function updateTransform() {
     track.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    gridTrack.style.transform = `translate(${translateX}px, ${translateY}px) scaleX(${scale})`;
     track.style.setProperty('--inv-scale', 1 / scale);
+    gridTrack.style.setProperty('--inv-scale', 1 / scale);
 
     // THE FIX: Starts growing gently the exact moment you zoom in from 0.02.
     // The 0.6 determines the intensity. Lower it to 0.4 for less growth, or raise to 0.8 for more.
@@ -1144,7 +1150,9 @@ function renderLoop() {
         translateX += diffX * glideSpeed;
 
         track.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        gridTrack.style.transform = `translate(${translateX}px, ${translateY}px) scaleX(${scale})`;
         track.style.setProperty('--inv-scale', 1 / scale);
+        gridTrack.style.setProperty('--inv-scale', 1 / scale);
        // THE FIX: Changed / 0.2 to / 0.1 so it ramps up to full opacity twice as fast
         track.style.setProperty('--detail-opacity', Math.max(0, Math.min(1, (scale - opacityStartScale) / opacityFadeRange)));
         
