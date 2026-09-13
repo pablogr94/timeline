@@ -4,36 +4,158 @@ function setStableAppHeight() {
 }
 setStableAppHeight();
 window.addEventListener('orientationchange', setStableAppHeight);
+window.addEventListener('resize', handleViewportGeometryChange);
+window.addEventListener('orientationchange', handleViewportGeometryChange);
 
-// --- TIMELINE CONSTANTS ---
-const minYear = 1800;
-const maxYear = 2100;
-const pixelsPerYear = 500; 
+function handleViewportGeometryChange() {
+    scheduleStackingLayoutRebuild();
+    updateViewportCulling();
+}
 
-// Base overlap steps at 1x zoom
-const verticalOffsetStep = 50;    // Increased from 70 to peek out vertically
-const horizontalOffsetStep = 20;   // Increased from 22 to fan out horizontally
-const minScreenGap = 120;
+// --- TUNING CONTROLS ---
+// Edit values here, then reload. Visual controls live in style.css :root.
+function deepFreeze(value) {
+    Object.values(value).forEach(child => {
+        if (child && typeof child === 'object') deepFreeze(child);
+    });
+    return Object.freeze(value);
+}
 
-// THE FIX: Change from const to let so we can temporarily slow it down
-let glideSpeed = 0.4; 
-const baseGlideSpeed = 0.4; // The snappy speed it will always return to
+const TIMELINE_CONFIG = deepFreeze({
+    timeline: {
+        minYear: 1800,
+        maxYear: 2100,
+        pixelsPerYear: 500,
+        initialYear: 1950,
+    },
+    camera: {
+        minScale: 0.02,
+        maxScale: 1.5,
+        baseGlideSpeed: 0.4,
+        contextGlideSpeed: 0.05,
+        glideRecoveryRate: 0.1,
+        wheelZoomInFactor: 1.10,
+        wheelZoomOutFactor: 0.90,
+        boundsPaddingViewportRatio: 0.5,
+    },
+    detail: {
+        itemZoomMultiplier: 1.5,
+        opacityStartScale: 0.1,
+        opacityFadeRange: 0.1,
+    },
+    layout: {
+        verticalOffsetStep: 50,
+        contextLaneStep: 45,
+        contextLaneBuffer: 150,
+        collisionGap: 20,
+        fixedCollisionScale: 0.05,
+        fallbackItemWidth: 150,
+        priorityBoost: 0.35,
+        priorityFadeStart: 0.3,
+        priorityFadeRange: 1.2,
+        stackFadeStart: 0.1,
+        stackFadeRange: 0.4,
+        sameYearVerticalStep: 200,
+        majorItemZIndex: 500,
+        defaultItemZIndex: 10,
+    },
+    context: {
+        autoPanDelayMs: 10,
+        screenPadding: 30,
+    },
+    mobileCard: {
+        widthBleed: 2,
+        fallbackAspectRatio: 0.65,
+        maxViewportHeightRatio: 0.80,
+        outsideTapDelayMs: 50,
+    },
+    touch: {
+        friction: 0.95,
+        velocityMultiplier: 25,
+        cancelTimerMs: 50,
+        minFlickSpeed: 0.1,
+        stopThreshold: 0.05,
+        velocitySampleMinMs: 10,
+        maxInstantVelocity: 3,
+        velocitySmoothingPrevious: 0.6,
+        velocitySmoothingCurrent: 0.4,
+    },
+    image: {
+        minAspectRatio: 0.70,
+    },
+    culling: {
+        viewportBufferRatio: 0.5,
+        imageLoadBufferRatio: 1,
+    },
+});
 
-// --- MOBILE TOUCH CONSTANTS ---
-const touchFriction = 0.95;         // 0.98 is very icy, 0.85 is heavy/sticky
-const touchVelocityMultiplier = 25; // How forcefully a flick throws the canvas
-const touchCancelTimer = 50;        // ms of finger resting before momentum is canceled
-const touchMinFlickSpeed = 0.1;     // Minimum velocity to trigger momentum
-const touchStopThreshold = 0.05;    // When the sliding animation goes to sleep
+// Exposed read-only for inspection in DevTools and behavior-preservation tests.
+Object.defineProperty(window, 'TIMELINE_CONFIG', {
+    value: TIMELINE_CONFIG,
+    enumerable: true,
+});
 
-// --- INTERACTION STATE ---
-const minZoomScale = 0.02;       // The furthest you can zoom out
-const itemZoomMultiplier = 1.5;  // How aggressively images grow as you zoom in (0.4 = subtle, 1.0 = massive)
+const { minYear, maxYear, pixelsPerYear, initialYear: targetYear } = TIMELINE_CONFIG.timeline;
+const {
+    minScale: minZoomScale,
+    maxScale: maxZoomScale,
+    baseGlideSpeed,
+    contextGlideSpeed,
+    glideRecoveryRate,
+    wheelZoomInFactor,
+    wheelZoomOutFactor,
+    boundsPaddingViewportRatio,
+} = TIMELINE_CONFIG.camera;
+const { itemZoomMultiplier, opacityStartScale, opacityFadeRange } = TIMELINE_CONFIG.detail;
+const {
+    verticalOffsetStep,
+    contextLaneStep,
+    contextLaneBuffer,
+    collisionGap,
+    fixedCollisionScale,
+    fallbackItemWidth,
+    priorityBoost,
+    priorityFadeStart,
+    priorityFadeRange,
+    stackFadeStart,
+    stackFadeRange,
+    sameYearVerticalStep,
+    majorItemZIndex,
+    defaultItemZIndex,
+} = TIMELINE_CONFIG.layout;
+const { autoPanDelayMs, screenPadding: contextScreenPadding } = TIMELINE_CONFIG.context;
+const {
+    widthBleed,
+    fallbackAspectRatio,
+    maxViewportHeightRatio,
+    outsideTapDelayMs,
+} = TIMELINE_CONFIG.mobileCard;
+const {
+    friction: touchFriction,
+    velocityMultiplier: touchVelocityMultiplier,
+    cancelTimerMs: touchCancelTimer,
+    minFlickSpeed: touchMinFlickSpeed,
+    stopThreshold: touchStopThreshold,
+    velocitySampleMinMs,
+    maxInstantVelocity,
+    velocitySmoothingPrevious,
+    velocitySmoothingCurrent,
+} = TIMELINE_CONFIG.touch;
+const { minAspectRatio } = TIMELINE_CONFIG.image;
+const { viewportBufferRatio, imageLoadBufferRatio } = TIMELINE_CONFIG.culling;
+
+function getCssTimeMs(customProperty) {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(customProperty).trim();
+    const match = value.match(/^(\d*\.?\d+)(ms|s)$/);
+    if (!match) return 0;
+    return Number(match[1]) * (match[2] === 's' ? 1000 : 1);
+}
+
+let glideSpeed = baseGlideSpeed;
 
 let targetScale = minZoomScale; // Where the zoom WANTS to be
 let scale = targetScale;        // Where the zoom ACTUALLY is
 
-const targetYear = 1950;
 const targetX = (targetYear - minYear) * pixelsPerYear;
 
 let targetTranslateX = (window.innerWidth / 2) - (targetX * targetScale);
@@ -41,9 +163,10 @@ let translateX = targetTranslateX;
 let translateY = 0;
 
 let isDragging = false;
-let startX, startY;
-let loadedItems = []; 
-let zoomTimeout;
+let startX;
+let loadedItems = [];
+let loadedContexts = [];
+let stackingLayoutRebuildQueued = false;
 
 const viewport = document.getElementById('viewport');
 const track = document.getElementById('track');
@@ -133,7 +256,7 @@ function renderItems(items) {
           
           // THE FIX: Added onload handler so it snaps to the correct lane the moment it downloads
           // THE FIX: Now routes through our smart-sizing function on download
-          html += `<img src="${item.image}" class="item-image" alt="${item.title}" onload="handleImageLoad(this)" onerror="this.onerror=null; this.src='${fallbackSVG}';">`;
+          html += `<img data-src="${item.image}" class="item-image" alt="${item.title}" loading="lazy" decoding="async" onload="handleImageLoad(this)" onerror="this.onerror=null; this.src='${fallbackSVG}';">`;
           el.style.backgroundColor = 'transparent'; 
       }
 
@@ -182,6 +305,7 @@ function renderItems(items) {
         `;
         
         el.innerHTML = html;
+        item.imageElement = el.querySelector('.item-image');
         
       // 3. Smart Click Logic (Aspect-Ratio Morph)
       el.addEventListener('click', (e) => {
@@ -218,12 +342,11 @@ function renderItems(items) {
         const img = el.querySelector('.item-image');
 
         // 2. Calculate true expanded dimensions using natural image aspect ratio
-        let targetWidth = window.innerWidth + 2; // Start with full width + 2px bleed
-        const aspect = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 0.65;
+        let targetWidth = window.innerWidth + widthBleed;
+        const aspect = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : fallbackAspectRatio;
         let targetHeight = targetWidth * aspect;
 
-        // THE CAP: Limit height to 60% of the screen so tall images don't cover the drawer
-        const maxHeight = window.innerHeight * 0.80; 
+        const maxHeight = window.innerHeight * maxViewportHeightRatio;
 
         if (targetHeight > maxHeight) {
             targetHeight = maxHeight;
@@ -302,6 +425,8 @@ function renderItems(items) {
             document.removeEventListener('click', handleOutsideTap);
             document.body.classList.remove('has-expanded-clone');
 
+            const cloneTransitionMs = getCssTimeMs('--motion-card-expand');
+
             const liveRect = el.getBoundingClientRect();
             
             clone.classList.remove('is-expanded');
@@ -310,18 +435,16 @@ function renderItems(items) {
             clone.style.width = `${liveRect.width}px`;
             clone.style.height = `${liveRect.height}px`;
             
-            // THE FIX: The Mid-Air Crossfade!
-            // At 200ms, reveal the perfectly-sorted original card, and smoothly 
-            // dissolve the flying clone over top of it.
+            // Reveal the original halfway through the CSS-controlled return flight,
+            // then remove the clone when that transition finishes.
             setTimeout(() => {
                 el.style.opacity = '1';
                 clone.style.opacity = '0';
-            }, 200);
+            }, cloneTransitionMs / 2);
             
-            // At 400ms, the clone is invisible, so we can delete it safely.
             setTimeout(() => {
                 clone.remove();
-            }, 400); 
+            }, cloneTransitionMs);
         };
 
         // Close listeners
@@ -338,7 +461,7 @@ function renderItems(items) {
 
         setTimeout(() => {
             document.addEventListener('click', handleOutsideTap);
-        }, 50);
+        }, outsideTapDelayMs);
  
     });
 
@@ -349,12 +472,14 @@ function renderItems(items) {
     }); 
     // ==========================================
 
+    rebuildStackingLayout();
     updateTransform();
 }
 
 // --- RENDER CONTEXTS (Handles both Spans and Single Points) ---
 function renderContexts(contexts) {
-    let worldEventLanes = [];  
+    loadedContexts = contexts;
+    let worldEventLanes = [];
     let culturalEraLanes = []; 
     
     // Sort chronologically using either year or start
@@ -371,7 +496,7 @@ function renderContexts(contexts) {
         const width = isPointEvent ? 0 : (endYear - startYear) * pixelsPerYear; 
         const endX = startX + width;
         
-        const buffer = 150; 
+        const buffer = contextLaneBuffer;
         const isWorldEvent = item.type === 'world_event';
         let targetLanes = isWorldEvent ? worldEventLanes : culturalEraLanes;
         
@@ -397,14 +522,14 @@ function renderContexts(contexts) {
         el.style.left = `${startX}px`;
         el.style.width = `${width}px`;
         
-        const laneOffset = assignedLane * 45; 
+        const laneOffset = assignedLane * contextLaneStep;
         el.style.top = `calc(${isWorldEvent ? -laneOffset : laneOffset}px * var(--inv-scale, 1))`;
 
         // 2. Format Date Text (Single year vs Range)
         const dateText = isPointEvent ? `${startYear}` : `${startYear} - ${endYear}`;
 
-        const imgHTML = item.image 
-            ? `<img src="${item.image}" class="card-image" alt="${item.title}">` 
+        const imgHTML = item.image
+            ? `<img data-src="${item.image}" class="card-image" alt="${item.title}" loading="lazy" decoding="async">`
             : '';
 
         // THE FIX: We build the 'X' and Wikipedia link directly into the card HTML here!
@@ -444,6 +569,10 @@ function renderContexts(contexts) {
                 ${descHTML}
             </div>
         `;
+        item.element = el;
+        item.baseStartX = startX;
+        item.baseEndX = endX;
+        item.imageElement = el.querySelector('.card-image');
         
         // THE FIX: Safe Click Logic with Smart Camera Panning
         el.addEventListener('click', (e) => {
@@ -466,7 +595,7 @@ function renderContexts(contexts) {
                     if (!card) return;
                     
                     const rect = card.getBoundingClientRect();
-                    const screenPadding = 30; // Gives a nice 30px breathing room from the edge of the glass
+                    const screenPadding = contextScreenPadding;
                     
                     let panOffset = 0;
                     
@@ -484,18 +613,18 @@ function renderContexts(contexts) {
                     // If we needed to pan, ensure we don't accidentally pan past the end of the timeline
                     if (panOffset !== 0) {
                         // THE FIX: Drop the engine into a buttery slow speed just for this movement!
-                        glideSpeed = 0.05;
+                        glideSpeed = contextGlideSpeed;
                         
                         const trackWidth = (maxYear - minYear) * pixelsPerYear;
                         const scaledWidth = trackWidth * targetScale;
-                        const paddingLimit = window.innerWidth / 2;
+                        const paddingLimit = window.innerWidth * boundsPaddingViewportRatio;
                         
                         const minX = -(scaledWidth - paddingLimit); 
                         const maxX = paddingLimit;
                         
                         targetTranslateX = Math.max(minX, Math.min(maxX, targetTranslateX));
                     }
-                }, 10);
+                }, autoPanDelayMs);
             }
         });
 
@@ -514,54 +643,34 @@ function renderContexts(contexts) {
             culturalErasTrack.appendChild(el);
         }
     });
+    updateViewportCulling();
 }
 
-// --- 4. DETERMINISTIC LANE STACKING & SMOOTH FADE ---
-function updateVerticalStacking() {
+// --- 4. CACHED LANE STACKING & SMOOTH FADE ---
+function rebuildStackingLayout() {
     if (!loadedItems.length) return;
 
-    const dynamicVerticalStep = verticalOffsetStep * Math.max(0.7, Math.min(1.1, scale));
-    const priorityBoostFactor = Math.max(0, 1 - (scale - 0.3) / 1.2);
-    
-    // THE MAGIC FADE: As you zoom in past 0.1, the lane heights smoothly collapse to 0
-    // By scale 0.5, all cards will have naturally settled back onto the center line!
-    const verticalFade = Math.max(0, Math.min(1, 1 - (scale - 0.1) / 0.4)); 
-
-    // THE FIX: Remove the .sort() entirely. Use the perfectly sorted array from loadData()
-    const sortedItems = loadedItems; 
-    
     const placedCards = [];
-    const gapBuffer = 20;
-    
-    // We use a fixed scale (0.05) to check collisions. 
-    // This makes the math immune to zooming, permanently eliminating all stuttering!
-    const fixedCollisionScale = 0.05; 
+    const sameYearCounts = new Map();
 
-    sortedItems.forEach((item, index) => {
+    loadedItems.forEach((item, index) => {
         item.globalIndex = index;
-        
         const isMajorMilestone = Number(item.priority) === 1;
-        item.priorityScale = isMajorMilestone ? 1 + (0.35 * priorityBoostFactor) : 1;
-        
-        const baseWidth = item.element.offsetWidth || 150;
-        
-        // 1. Calculate boundaries in a static, zoom-independent space
+        const baseWidth = item.element.offsetWidth || fallbackItemWidth;
         const staticX = (item.year - minYear) * pixelsPerYear * fixedCollisionScale;
-        const staticWidth = baseWidth * (isMajorMilestone ? 1.35 : 1);
+        const staticWidth = baseWidth * (isMajorMilestone ? 1 + priorityBoost : 1);
         const staticLeft = staticX - (staticWidth / 2);
         const staticRight = staticX + (staticWidth / 2);
 
-        // 2. Find the lowest available deterministic lane
         let laneIndex = 0;
         let foundLane = false;
-        
+
         while (!foundLane) {
             const assignedOffset = laneIndex === 0 ? 0 : Math.ceil(laneIndex / 2) * (laneIndex % 2 === 1 ? -1 : 1);
-            
             const hasCollision = placedCards.some(p => {
                 return p.laneOffset === assignedOffset &&
-                       (staticLeft < p.staticRight + gapBuffer) &&
-                       (staticRight > p.staticLeft - gapBuffer);
+                       (staticLeft < p.staticRight + collisionGap) &&
+                       (staticRight > p.staticLeft - collisionGap);
             });
 
             if (!hasCollision) {
@@ -572,42 +681,88 @@ function updateVerticalStacking() {
                 laneIndex++;
             }
         }
-        
-        // 3. Count identical years to prevent overlap when fully zoomed in
-        let sameYearCount = 0;
-        for (let i = 0; i < index; i++) {
-            if (sortedItems[i].year === item.year) sameYearCount++;
-        }
 
-        // 4. Calculate final positions
+        item.sameYearCount = sameYearCounts.get(item.year) || 0;
+        sameYearCounts.set(item.year, item.sameYearCount + 1);
+        item.isMajorMilestone = isMajorMilestone;
+        item.element.style.left = `${item.baseX}px`;
+        item.element.style.zIndex = (isMajorMilestone ? majorItemZIndex : defaultItemZIndex) + index;
+    });
+}
+
+function scheduleStackingLayoutRebuild() {
+    if (stackingLayoutRebuildQueued) return;
+    stackingLayoutRebuildQueued = true;
+    requestAnimationFrame(() => {
+        stackingLayoutRebuildQueued = false;
+        rebuildStackingLayout();
+        updateVerticalStacking();
+    });
+}
+
+function updateVerticalStacking() {
+    if (!loadedItems.length) return;
+
+    const dynamicVerticalStep = verticalOffsetStep * Math.max(0.7, Math.min(1.1, scale));
+    const priorityBoostFactor = Math.max(0, 1 - (scale - priorityFadeStart) / priorityFadeRange);
+    const verticalFade = Math.max(0, Math.min(1, 1 - (scale - stackFadeStart) / stackFadeRange));
+
+    loadedItems.forEach(item => {
+        if (item.isCulled) return;
+        item.priorityScale = item.isMajorMilestone ? 1 + (priorityBoost * priorityBoostFactor) : 1;
         let yOffset = item.laneOffset * dynamicVerticalStep * verticalFade;
-        let xOffset = 0;
 
-        if (sameYearCount > 0) {
-            // THE FIX: Fan out VERTICALLY (one above, one below) when they share the exact same year
-            const yMultiplier = Math.ceil(sameYearCount / 2);
-            const yDirection = sameYearCount % 2 === 1 ? -1 : 1;
-            
-            // We use a large vertical step (200px) so the images completely clear each other.
-            // The Math.max(0, 1 - verticalFade) ensures this separation organically kicks in as you zoom in!
-            const verticalStep = 200 * Math.max(0, 1 - verticalFade); 
-            
-            // Apply the large vertical spread on top of any existing lane math
+        if (item.sameYearCount > 0) {
+            const yMultiplier = Math.ceil(item.sameYearCount / 2);
+            const yDirection = item.sameYearCount % 2 === 1 ? -1 : 1;
+            const verticalStep = sameYearVerticalStep * Math.max(0, 1 - verticalFade);
             yOffset += yMultiplier * yDirection * verticalStep;
-            
-            // Remove the horizontal fanning entirely. 
-            // This guarantees both items stay perfectly anchored to their true year line!
-            xOffset = 0; 
         }
 
-        // 5. Apply styles
         item.element.style.setProperty('--priority-scale', item.priorityScale);
-        item.element.style.left = `calc(${item.baseX}px + (${xOffset}px * var(--inv-scale, 1)))`;
         item.element.style.top = `calc(${yOffset}px * var(--inv-scale, 1))`;
-        
-        // Locked Z-Index strictly by chronology to permanently stop z-fighting
-        const baseZ = isMajorMilestone ? 500 : 10;
-        item.element.style.zIndex = baseZ + item.globalIndex;
+    });
+}
+
+function getViewportWorldBounds(bufferRatio) {
+    const bufferPixels = window.innerWidth * bufferRatio;
+    return {
+        left: (-translateX - bufferPixels) / scale,
+        right: (window.innerWidth - translateX + bufferPixels) / scale,
+    };
+}
+
+function loadDeferredImage(imageElement) {
+    if (!imageElement || imageElement.hasAttribute('src') || !imageElement.dataset.src) return;
+    imageElement.src = imageElement.dataset.src;
+}
+
+function setCulledState(item, isCulled) {
+    if (item.isCulled === isCulled) return;
+    item.isCulled = isCulled;
+    item.element.classList?.toggle('is-culled', isCulled);
+}
+
+function updateViewportCulling() {
+    const visibleBounds = getViewportWorldBounds(viewportBufferRatio);
+    const imageBounds = getViewportWorldBounds(imageLoadBufferRatio);
+
+    loadedItems.forEach(item => {
+        const isVisible = item.baseX >= visibleBounds.left && item.baseX <= visibleBounds.right;
+        setCulledState(item, !isVisible);
+
+        if (item.baseX >= imageBounds.left && item.baseX <= imageBounds.right) {
+            loadDeferredImage(item.imageElement);
+        }
+    });
+
+    loadedContexts.forEach(item => {
+        const isVisible = item.baseEndX >= visibleBounds.left && item.baseStartX <= visibleBounds.right;
+        setCulledState(item, !isVisible);
+
+        if (item.baseEndX >= imageBounds.left && item.baseStartX <= imageBounds.right) {
+            loadDeferredImage(item.imageElement);
+        }
     });
 }
 // --- 5. UPDATE SCREEN ---
@@ -620,7 +775,8 @@ function updateTransform() {
     // Change it in both functions to this:
     track.style.setProperty('--item-zoom', 1 + (scale - minZoomScale) * itemZoomMultiplier);
     // THE FIX: Changed / 0.2 to / 0.1 so it ramps up to full opacity twice as fast
-    track.style.setProperty('--detail-opacity', Math.max(0, Math.min(1, (scale - 0.1) / 0.1)));
+    track.style.setProperty('--detail-opacity', Math.max(0, Math.min(1, (scale - opacityStartScale) / opacityFadeRange)));
+    updateViewportCulling();
     updateVerticalStacking();
 }
 
@@ -639,7 +795,7 @@ window.addEventListener('mousemove', (e) => {
     
     const trackWidth = (maxYear - minYear) * pixelsPerYear;
     const scaledWidth = trackWidth * targetScale;
-    const padding = window.innerWidth / 2;
+    const padding = window.innerWidth * boundsPaddingViewportRatio;
     
     const minX = -(scaledWidth - padding); 
     const maxX = padding;                  
@@ -705,14 +861,14 @@ window.addEventListener('touchmove', (e) => {
         
         // THE FIX: Velocity Armor
         // 1. Only process velocity if at least 10ms have passed (kills 1ms sub-frame explosions)
-        if (dt > 10) {
+        if (dt > velocitySampleMinMs) {
             let instantVelocity = deltaX / dt;
             
             // 2. Hard cap the maximum possible velocity so a bad finger roll can't throw the map
-            instantVelocity = Math.max(-3, Math.min(3, instantVelocity));
+            instantVelocity = Math.max(-maxInstantVelocity, Math.min(maxInstantVelocity, instantVelocity));
             
             // 3. Smooth the velocity by blending it with the previous frame's momentum
-            velocityX = (velocityX * 0.6) + (instantVelocity * 0.4);
+            velocityX = (velocityX * velocitySmoothingPrevious) + (instantVelocity * velocitySmoothingCurrent);
             
             lastTouchXPos = currentClientX;
             lastTouchTime = currentTime;
@@ -720,7 +876,7 @@ window.addEventListener('touchmove', (e) => {
         
         const trackWidth = (maxYear - minYear) * pixelsPerYear;
         const scaledWidth = trackWidth * targetScale;
-        const padding = window.innerWidth / 2;
+        const padding = window.innerWidth * boundsPaddingViewportRatio;
         const minX = -(scaledWidth - padding); 
         const maxX = padding;                  
         
@@ -746,7 +902,7 @@ window.addEventListener('touchmove', (e) => {
         );
         
         let newScale = initialScale * (currentDistance / initialPinchDistance);
-        newScale = Math.max(minZoomScale, Math.min(newScale, 1.5)); 
+        newScale = Math.max(minZoomScale, Math.min(newScale, maxZoomScale));
         
         const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
         const xs = (midX - targetTranslateX) / targetScale;
@@ -756,7 +912,7 @@ window.addEventListener('touchmove', (e) => {
 
         const trackWidth = (maxYear - minYear) * pixelsPerYear;
         const scaledWidth = trackWidth * targetScale;
-        const padding = window.innerWidth / 2;
+        const padding = window.innerWidth * boundsPaddingViewportRatio;
         const minX = -(scaledWidth - padding);
         const maxX = padding;
 
@@ -790,7 +946,7 @@ window.addEventListener('touchend', (e) => {
                     
                     const trackWidth = (maxYear - minYear) * pixelsPerYear;
                     const scaledWidth = trackWidth * targetScale;
-                    const padding = window.innerWidth / 2;
+                    const padding = window.innerWidth * boundsPaddingViewportRatio;
                     const minX = -(scaledWidth - padding); 
                     const maxX = padding;
                     
@@ -832,15 +988,15 @@ viewport.addEventListener('wheel', (e) => {
     const xs = (mouseX - targetTranslateX) / targetScale;
 
     // Use smaller increments for smoother wheel stepping
-    const zoomAmount = e.deltaY > 0 ? 0.90 : 1.10; 
+    const zoomAmount = e.deltaY > 0 ? wheelZoomOutFactor : wheelZoomInFactor;
     targetScale *= zoomAmount;
-    targetScale = Math.max(minZoomScale, Math.min(targetScale, 1.5));
+    targetScale = Math.max(minZoomScale, Math.min(targetScale, maxZoomScale));
 
     targetTranslateX = mouseX - xs * targetScale;
 
     const trackWidth = (maxYear - minYear) * pixelsPerYear;
     const scaledWidth = trackWidth * targetScale;
-    const padding = window.innerWidth / 2;
+    const padding = window.innerWidth * boundsPaddingViewportRatio;
 
     const minX = -(scaledWidth - padding);
     const maxX = padding;
@@ -860,7 +1016,7 @@ function renderLoop() {
         track.classList.add('is-moving'); 
 
         // THE FIX: Gracefully slides the glideSpeed back up to 0.4 if it was lowered
-        glideSpeed += (baseGlideSpeed - glideSpeed) * 0.1;
+        glideSpeed += (baseGlideSpeed - glideSpeed) * glideRecoveryRate;
 
         scale += diffScale * glideSpeed;
         translateX += diffX * glideSpeed;
@@ -868,13 +1024,14 @@ function renderLoop() {
         track.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
         track.style.setProperty('--inv-scale', 1 / scale);
        // THE FIX: Changed / 0.2 to / 0.1 so it ramps up to full opacity twice as fast
-        track.style.setProperty('--detail-opacity', Math.max(0, Math.min(1, (scale - 0.1) / 0.1)));
+        track.style.setProperty('--detail-opacity', Math.max(0, Math.min(1, (scale - opacityStartScale) / opacityFadeRange)));
         
         // THE FIX: Starts growing gently the exact moment you zoom in from 0.02.
         // The 0.6 determines the intensity. Lower it to 0.4 for less growth, or raise to 0.8 for more.
         // Change it in both functions to this:
         track.style.setProperty('--item-zoom', 1 + (scale - minZoomScale) * itemZoomMultiplier);
 
+        updateViewportCulling();
         updateVerticalStacking();
     } else {
         track.classList.remove('is-moving');
@@ -890,7 +1047,7 @@ window.handleImageLoad = function(img) {
     const aspect = img.naturalWidth / img.naturalHeight;
     
     // The target: Image width should never be less than 70% of its base height
-    const minAspect = 0.70; 
+    const minAspect = minAspectRatio;
     
     if (aspect > 0 && aspect < minAspect) {
         // Calculate how much we need to multiply the height by to reach the minimum width
@@ -898,8 +1055,8 @@ window.handleImageLoad = function(img) {
         img.closest('.timeline-item').style.setProperty('--aspect-boost', boost);
     }
     
-    // Proceed with assigning the lane now that the true size is known
-    updateVerticalStacking();
+    // Re-measure lane geometry after loaded images settle, batching same-frame loads.
+    scheduleStackingLayoutRebuild();
 };
 
 renderLoop();

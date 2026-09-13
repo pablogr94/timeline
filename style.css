@@ -1,14 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;700;800&display=swap');
 
 :root {
-    /* Desktop size */
+    /* --- VISUAL TUNING CONTROLS --- */
     --base-item-height: 100px;
+    --mobile-base-item-height: 100px;
+
+    --canvas-color: #b0b0b0;
+    --center-line-color: rgba(0, 0, 0, 0.4);
+    --century-grid-color: rgba(0, 0, 0, 0.3);
+    --decade-grid-color: rgba(0, 0, 0, 0.1);
+    --annual-grid-color: rgba(0, 0, 0, 0.15);
+    --year-label-color: #ffffff;
+
+    --item-surface-color: #2a2a2a;
+    --item-text-color: #ffffff;
+    --description-surface-color: #0e0e0e;
+    --description-text-color: rgb(225, 225, 225);
+
+    --context-line-color: #7a7a7a;
+    --context-title-color: #555555;
+    --context-card-surface-color: #1a1a1a;
+    --context-card-width: 220px;
+    --context-card-padding-y: 12px;
+    --context-card-padding-x: 14px;
+
+    --motion-hover-scale: 0.4s;
+    --motion-card-position: 0.85s;
+    --motion-card-expand: 0.4s;
+    --motion-fast: 0.2s;
 }
 
 /* Mobile size */
 @media (max-width: 768px) {
     :root {
-        --base-item-height: 100px;
+        --base-item-height: var(--mobile-base-item-height);
     }
 }
 
@@ -27,7 +52,7 @@ body, html {
     padding: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #b0b0b0; 
+    background-color: var(--canvas-color);
     overflow: hidden; 
     font-family: 'Helvetica Neue', Arial, sans-serif;
 
@@ -72,7 +97,7 @@ body, html {
     left: 0;
     width: 100%;
     height: 1px;
-    background-color: rgba(0, 0, 0, 0.4); 
+    background-color: var(--center-line-color);
     z-index: 0;
     transform-origin: left center; 
     transform: scaleY(var(--inv-scale, 1));
@@ -83,7 +108,7 @@ body, html {
     top: -100vh; 
     height: 200vh; 
     width: 0;
-    border-left: 1px dashed rgba(0, 0, 0, 0.3); 
+    border-left: 1px dashed var(--century-grid-color);
     z-index: 1;
     pointer-events: none;
     
@@ -96,7 +121,7 @@ body, html {
     top: -100vh; 
     height: 200vh; 
     width: 0;
-    border-left: 1px dashed rgba(0, 0, 0, 0.1); 
+    border-left: 1px dashed var(--decade-grid-color);
     z-index: 0; 
     pointer-events: none;
     transform: scaleX(var(--inv-scale, 1)); 
@@ -108,7 +133,7 @@ body, html {
     top: -100vh; 
     height: 200vh; 
     width: 0;
-    border-left: 1px dotted rgba(0, 0, 0, 0.15); 
+    border-left: 1px dotted var(--annual-grid-color);
     z-index: 0; 
     pointer-events: none;
     transform: scaleX(var(--inv-scale, 1)); 
@@ -127,7 +152,7 @@ body, html {
     --active-hover-scale: 1;
     height: calc(var(--base-item-height) * var(--aspect-boost, 1));
     width: fit-content;      
-    background-color: #2a2a2a; 
+    background-color: var(--item-surface-color);
     box-sizing: border-box;
     border-radius: 0; 
     overflow: visible; 
@@ -141,12 +166,18 @@ body, html {
        - 'top' and 'left' are extended to 0.85s with a highly fluid easing curve.
          Now, when they un-stack, they look like they are floating and settling 
          deliberately like physical objects! */
-    transition: scale 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                top 0.85s cubic-bezier(0.19, 1, 0.22, 1),
-                left 0.85s cubic-bezier(0.19, 1, 0.22, 1);
+    transition: scale var(--motion-hover-scale) cubic-bezier(0.22, 1, 0.36, 1),
+                top var(--motion-card-position) cubic-bezier(0.19, 1, 0.22, 1),
+                left var(--motion-card-position) cubic-bezier(0.19, 1, 0.22, 1);
     
     will-change: transform, scale, top, left;
     backface-visibility: hidden;
+}
+
+.is-culled {
+    visibility: hidden;
+    pointer-events: none;
+    will-change: auto;
 }
 
 
@@ -254,8 +285,8 @@ body, html {
     --total-visual-scale: calc(var(--priority-scale, 1) * var(--item-zoom, 1) * var(--active-hover-scale, 1));
     width: calc(100% * var(--total-visual-scale));
     box-sizing: border-box; 
-    padding: 14px 10px 10px 10px; 
-    color: #ffffff; 
+    padding: 14px 10px 10px 10px;
+    color: var(--item-text-color);
     font-family: '42dot Sans', sans-serif;
     
     /* THE FIX: An "eased" gradient that looks incredibly smooth and premium, 
@@ -335,8 +366,8 @@ body, html {
 }
 
 .info-desc-box {
-    background-color: #0e0e0e; 
-    color: rgb(225, 225, 225); 
+    background-color: var(--description-surface-color);
+    color: var(--description-text-color);
     font-size: 0.7rem; 
     font-weight: 300;
     line-height: 1.35;
@@ -363,7 +394,7 @@ body, html {
     font-family: '42dot Sans', sans-serif;
     font-size: 1rem; 
     font-weight: 300; 
-    color: #ffffff;  
+    color: var(--year-label-color);
     pointer-events: none;
     z-index: 5;
     
@@ -419,7 +450,7 @@ body, html {
     left: 0;
     width: 100%;
     height: 0.5px;
-    background-color: #7a7a7a; 
+    background-color: var(--context-line-color);
     
     transform-origin: left center; 
     transform: scaleY(var(--inv-scale, 1));
@@ -435,7 +466,7 @@ body, html {
     width: 3px;
     height: 3px;
     
-    background-color: #7a7a7a; 
+    background-color: var(--context-line-color);
     border-radius: 50%;
     transform: scale(var(--inv-scale, 1));
 }
@@ -450,7 +481,7 @@ body, html {
     height: 6px;
     box-sizing: border-box;
     
-    border: 1.5px solid #7a7a7a;
+    border: 1.5px solid var(--context-line-color);
     border-radius: 50%;
     background-color: transparent; 
     
@@ -474,7 +505,7 @@ body, html {
     width: fit-content;             /* THE FIX: Forces container to hug ONLY the text width */
     
     font-family: '42dot Sans', sans-serif;
-    color: #555555; 
+    color: var(--context-title-color);
     white-space: nowrap;
     
     transform-origin: top left;
@@ -508,7 +539,7 @@ body, html {
 .title-year {
     font-size: 0.7rem; 
     font-weight: 400;
-    color: #7a7a7a;
+    color: var(--context-line-color);
 }
 
 /* --- HOVER CARD POPUPS (Overflow Protected) --- */
@@ -524,7 +555,7 @@ body, html {
     width: fit-content;
     
     font-family: '42dot Sans', sans-serif;
-    color: #555555; 
+    color: var(--context-title-color);
     white-space: nowrap;
     
     transform-origin: top left;
@@ -544,12 +575,12 @@ body, html {
 .context-card {
     position: absolute;
     left: calc(100% + 12px);
-    width: 220px;
+    width: var(--context-card-width);
     height: auto;
     
-    background-color: #1a1a1a; 
-    color: #ffffff;
-    padding: 12px 14px;
+    background-color: var(--context-card-surface-color);
+    color: var(--item-text-color);
+    padding: var(--context-card-padding-y) var(--context-card-padding-x);
     box-sizing: border-box;
     
     border-radius: 0; 
@@ -565,7 +596,7 @@ body, html {
     z-index: 99999 !important;
     
     /* Leave transition (No delay) */
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    transition: opacity var(--motion-fast) ease, transform var(--motion-fast) ease, visibility var(--motion-fast);
 }
 
 /* 2. Invisible Hover Bridge (Prevents hover drop-off over the 12px gap) */
@@ -589,8 +620,8 @@ body, html {
     pointer-events: auto; 
     
     /* Snappy entrance transition */
-    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
-                transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s, 
+    transition: opacity var(--motion-card-expand) cubic-bezier(0.22, 1, 0.36, 1) 0.1s,
+                transform var(--motion-card-expand) cubic-bezier(0.22, 1, 0.36, 1) 0.1s,
                 visibility 0s 0.1s;
 }
 
@@ -618,10 +649,10 @@ body, html {
 
 /* Card Thumbnail Image (Edge-to-Edge & Uncropped) */
 .card-image {
-    width: calc(100% + 28px); 
-    margin-top: -12px;
-    margin-left: -14px;
-    margin-right: -14px;
+    width: calc(100% + (2 * var(--context-card-padding-x)));
+    margin-top: calc(-1 * var(--context-card-padding-y));
+    margin-left: calc(-1 * var(--context-card-padding-x));
+    margin-right: calc(-1 * var(--context-card-padding-x));
     margin-bottom: 10px;
     height: auto; 
     display: block;
@@ -686,7 +717,7 @@ body.has-expanded-clone #track {
     pointer-events: none;
     
     /* Matches the exact easing curve and speed of the image expansion */
-    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity var(--motion-card-expand) cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Triggers the fade-in automatically when an image is opened */
@@ -708,11 +739,11 @@ body.has-expanded-clone::before {
     transform: none !important;
     
     /* THE FIX: Added the opacity transition at the very end! */
-    transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                top 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                opacity 0.2s ease;
+    transition: left var(--motion-card-expand) cubic-bezier(0.22, 1, 0.36, 1),
+                top var(--motion-card-expand) cubic-bezier(0.22, 1, 0.36, 1),
+                width var(--motion-card-expand) cubic-bezier(0.22, 1, 0.36, 1),
+                height var(--motion-card-expand) cubic-bezier(0.22, 1, 0.36, 1),
+                opacity var(--motion-fast) ease;
                 
     pointer-events: auto;
     overflow: hidden;

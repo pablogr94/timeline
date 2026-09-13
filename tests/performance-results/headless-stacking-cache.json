@@ -1,0 +1,1454 @@
+{
+  "generatedAt": "2026-09-12T12:16:42.609Z",
+  "revision": "5897ab3",
+  "appSourceSha256": "f846b6c3b42f8bb959ec8fe8cc6f4b0d43d6d3654af0fc1877793036cea8ba81",
+  "benchmarkSha256": "53aad5a82d6df69e2059675475ec07bc18087b773da829f3f63c3d1c79dde9c6",
+  "mode": "headless",
+  "chrome": "Chrome/152.0.7977.84",
+  "framesPerCase": 180,
+  "runsPerCase": 3,
+  "fixture": "Deterministic local SVG thumbnails; spread and >=50% same-year dense scenarios.",
+  "caveat": "Desktop and mobile presets are automated Chrome runs. Mobile emulation is not a physical-phone result.",
+  "results": [
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.8,
+        "p95Ms": 18,
+        "maxMs": 18.6,
+        "meanMs": 16.66
+      },
+      "stacking": {
+        "medianMs": 1.6,
+        "p95Ms": 1.7,
+        "maxMs": 1.9,
+        "meanMs": 1.637
+      },
+      "framesOver16_7Percent": 54.4,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 18.1,
+            "maxMs": 18.5,
+            "meanMs": 16.667
+          },
+          "stacking": {
+            "medianMs": 1.8,
+            "p95Ms": 1.9,
+            "maxMs": 2.2,
+            "meanMs": 1.782
+          },
+          "framesOver16_7Percent": 55.6,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.8,
+            "p95Ms": 18,
+            "maxMs": 18.6,
+            "meanMs": 16.66
+          },
+          "stacking": {
+            "medianMs": 1.6,
+            "p95Ms": 1.7,
+            "maxMs": 1.9,
+            "meanMs": 1.637
+          },
+          "framesOver16_7Percent": 54.4,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.8,
+            "p95Ms": 17.9,
+            "maxMs": 18.3,
+            "meanMs": 16.667
+          },
+          "stacking": {
+            "medianMs": 1.6,
+            "p95Ms": 1.7,
+            "maxMs": 1.9,
+            "meanMs": 1.646
+          },
+          "framesOver16_7Percent": 50.6,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 16.9,
+        "p95Ms": 18,
+        "maxMs": 18.6,
+        "meanMs": 16.664
+      },
+      "stacking": {
+        "medianMs": 5.2,
+        "p95Ms": 5.5,
+        "maxMs": 5.8,
+        "meanMs": 5.183
+      },
+      "framesOver16_7Percent": 58.9,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 18,
+            "maxMs": 18.6,
+            "meanMs": 16.664
+          },
+          "stacking": {
+            "medianMs": 5.2,
+            "p95Ms": 5.5,
+            "maxMs": 5.8,
+            "meanMs": 5.183
+          },
+          "framesOver16_7Percent": 58.9,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 18.1,
+            "maxMs": 18.3,
+            "meanMs": 16.662
+          },
+          "stacking": {
+            "medianMs": 5.1,
+            "p95Ms": 5.4,
+            "maxMs": 7,
+            "meanMs": 5.092
+          },
+          "framesOver16_7Percent": 51.7,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.8,
+            "p95Ms": 17.9,
+            "maxMs": 18.2,
+            "meanMs": 16.664
+          },
+          "stacking": {
+            "medianMs": 5.1,
+            "p95Ms": 5.4,
+            "maxMs": 5.5,
+            "meanMs": 5.078
+          },
+          "framesOver16_7Percent": 51.7,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 16.2,
+        "p95Ms": 20.7,
+        "maxMs": 23.7,
+        "meanMs": 16.879
+      },
+      "stacking": {
+        "medianMs": 12.7,
+        "p95Ms": 14.9,
+        "maxMs": 18.1,
+        "meanMs": 13.011
+      },
+      "framesOver16_7Percent": 39.4,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.2,
+            "p95Ms": 20.7,
+            "maxMs": 23.7,
+            "meanMs": 16.879
+          },
+          "stacking": {
+            "medianMs": 12.7,
+            "p95Ms": 14.9,
+            "maxMs": 18.1,
+            "meanMs": 13.011
+          },
+          "framesOver16_7Percent": 39.4,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.3,
+            "p95Ms": 20.2,
+            "maxMs": 20.9,
+            "meanMs": 16.667
+          },
+          "stacking": {
+            "medianMs": 12.3,
+            "p95Ms": 15.1,
+            "maxMs": 15.7,
+            "meanMs": 12.645
+          },
+          "framesOver16_7Percent": 43.9,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.8,
+            "p95Ms": 20.8,
+            "maxMs": 29.3,
+            "meanMs": 17.341
+          },
+          "stacking": {
+            "medianMs": 12.7,
+            "p95Ms": 15.5,
+            "maxMs": 25.4,
+            "meanMs": 13.211
+          },
+          "framesOver16_7Percent": 55.6,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 31.2,
+        "p95Ms": 37.8,
+        "maxMs": 42.4,
+        "meanMs": 32.353
+      },
+      "stacking": {
+        "medianMs": 25.1,
+        "p95Ms": 29.9,
+        "maxMs": 33.2,
+        "meanMs": 25.489
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 27.8,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 31.2,
+            "p95Ms": 37.8,
+            "maxMs": 42.4,
+            "meanMs": 32.353
+          },
+          "stacking": {
+            "medianMs": 25.1,
+            "p95Ms": 29.9,
+            "maxMs": 33.2,
+            "meanMs": 25.489
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 27.8
+        },
+        {
+          "frame": {
+            "medianMs": 30.9,
+            "p95Ms": 37.2,
+            "maxMs": 39.7,
+            "meanMs": 32.085
+          },
+          "stacking": {
+            "medianMs": 25,
+            "p95Ms": 29.1,
+            "maxMs": 31.7,
+            "meanMs": 25.344
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 26.1
+        },
+        {
+          "frame": {
+            "medianMs": 32.1,
+            "p95Ms": 40.8,
+            "maxMs": 69.9,
+            "meanMs": 33.848
+          },
+          "stacking": {
+            "medianMs": 25.3,
+            "p95Ms": 30.3,
+            "maxMs": 61.1,
+            "meanMs": 26.377
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 42.8
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 67.3,
+        "p95Ms": 84.2,
+        "maxMs": 100.3,
+        "meanMs": 68.725
+      },
+      "stacking": {
+        "medianMs": 50.5,
+        "p95Ms": 63.6,
+        "maxMs": 70.7,
+        "meanMs": 51.963
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 99.4,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 67.3,
+            "p95Ms": 84.2,
+            "maxMs": 100.3,
+            "meanMs": 68.725
+          },
+          "stacking": {
+            "medianMs": 50.5,
+            "p95Ms": 63.6,
+            "maxMs": 70.7,
+            "meanMs": 51.963
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 66.7,
+            "p95Ms": 83.9,
+            "maxMs": 89,
+            "meanMs": 67.791
+          },
+          "stacking": {
+            "medianMs": 50,
+            "p95Ms": 63.2,
+            "maxMs": 71.5,
+            "meanMs": 51.322
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 66.9,
+            "p95Ms": 84.6,
+            "maxMs": 95.5,
+            "meanMs": 68.003
+          },
+          "stacking": {
+            "medianMs": 50.1,
+            "p95Ms": 65.3,
+            "maxMs": 77.6,
+            "meanMs": 51.439
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 99.4
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.7,
+        "p95Ms": 17.8,
+        "maxMs": 18.3,
+        "meanMs": 16.677
+      },
+      "stacking": {
+        "medianMs": 2,
+        "p95Ms": 2.1,
+        "maxMs": 5.5,
+        "meanMs": 1.98
+      },
+      "framesOver16_7Percent": 50.6,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.7,
+            "p95Ms": 17.8,
+            "maxMs": 18.3,
+            "meanMs": 16.677
+          },
+          "stacking": {
+            "medianMs": 2,
+            "p95Ms": 2.1,
+            "maxMs": 5.5,
+            "meanMs": 1.98
+          },
+          "framesOver16_7Percent": 50.6,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.6,
+            "p95Ms": 17.8,
+            "maxMs": 18.4,
+            "meanMs": 16.663
+          },
+          "stacking": {
+            "medianMs": 2,
+            "p95Ms": 2.1,
+            "maxMs": 2.2,
+            "meanMs": 1.958
+          },
+          "framesOver16_7Percent": 50,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.6,
+            "p95Ms": 17.4,
+            "maxMs": 18.2,
+            "meanMs": 16.664
+          },
+          "stacking": {
+            "medianMs": 1.9,
+            "p95Ms": 2,
+            "maxMs": 2.1,
+            "meanMs": 1.93
+          },
+          "framesOver16_7Percent": 48.3,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 16.8,
+        "p95Ms": 17.6,
+        "maxMs": 18.4,
+        "meanMs": 16.673
+      },
+      "stacking": {
+        "medianMs": 5.3,
+        "p95Ms": 5.7,
+        "maxMs": 6.8,
+        "meanMs": 5.356
+      },
+      "framesOver16_7Percent": 52.8,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 17.6,
+            "maxMs": 18.3,
+            "meanMs": 16.671
+          },
+          "stacking": {
+            "medianMs": 5.4,
+            "p95Ms": 5.6,
+            "maxMs": 6.3,
+            "meanMs": 5.379
+          },
+          "framesOver16_7Percent": 53.3,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.8,
+            "p95Ms": 17.6,
+            "maxMs": 18.4,
+            "meanMs": 16.673
+          },
+          "stacking": {
+            "medianMs": 5.3,
+            "p95Ms": 5.7,
+            "maxMs": 6.8,
+            "meanMs": 5.356
+          },
+          "framesOver16_7Percent": 52.8,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 18,
+            "maxMs": 18.3,
+            "meanMs": 16.668
+          },
+          "stacking": {
+            "medianMs": 5.3,
+            "p95Ms": 5.7,
+            "maxMs": 6.8,
+            "meanMs": 5.381
+          },
+          "framesOver16_7Percent": 55,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 17.1,
+        "p95Ms": 21,
+        "maxMs": 31.7,
+        "meanMs": 17.643
+      },
+      "stacking": {
+        "medianMs": 13.1,
+        "p95Ms": 15.7,
+        "maxMs": 28.4,
+        "meanMs": 13.485
+      },
+      "framesOver16_7Percent": 59.4,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.4,
+            "p95Ms": 20.8,
+            "maxMs": 24.1,
+            "meanMs": 17.065
+          },
+          "stacking": {
+            "medianMs": 12.9,
+            "p95Ms": 15.9,
+            "maxMs": 17.5,
+            "meanMs": 13.303
+          },
+          "framesOver16_7Percent": 43.3,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 17.1,
+            "p95Ms": 21,
+            "maxMs": 31.7,
+            "meanMs": 17.643
+          },
+          "stacking": {
+            "medianMs": 13.1,
+            "p95Ms": 15.7,
+            "maxMs": 28.4,
+            "meanMs": 13.485
+          },
+          "framesOver16_7Percent": 59.4,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.6,
+            "p95Ms": 21.3,
+            "maxMs": 23.5,
+            "meanMs": 17.242
+          },
+          "stacking": {
+            "medianMs": 13.1,
+            "p95Ms": 15.6,
+            "maxMs": 16.5,
+            "meanMs": 13.269
+          },
+          "framesOver16_7Percent": 47.2,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 31.6,
+        "p95Ms": 38.3,
+        "maxMs": 44.4,
+        "meanMs": 32.717
+      },
+      "stacking": {
+        "medianMs": 25.4,
+        "p95Ms": 29.8,
+        "maxMs": 33.5,
+        "meanMs": 25.851
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 26.7,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 31.6,
+            "p95Ms": 38.3,
+            "maxMs": 44.4,
+            "meanMs": 32.717
+          },
+          "stacking": {
+            "medianMs": 25.4,
+            "p95Ms": 29.8,
+            "maxMs": 33.5,
+            "meanMs": 25.851
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 26.7
+        },
+        {
+          "frame": {
+            "medianMs": 32.3,
+            "p95Ms": 38.9,
+            "maxMs": 48.6,
+            "meanMs": 33.222
+          },
+          "stacking": {
+            "medianMs": 25.6,
+            "p95Ms": 30,
+            "maxMs": 33.4,
+            "meanMs": 25.971
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 40
+        },
+        {
+          "frame": {
+            "medianMs": 31.3,
+            "p95Ms": 38.1,
+            "maxMs": 47.5,
+            "meanMs": 32.546
+          },
+          "stacking": {
+            "medianMs": 25.2,
+            "p95Ms": 29.8,
+            "maxMs": 34.3,
+            "meanMs": 25.67
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 29.4
+        }
+      ]
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 66.9,
+        "p95Ms": 84.7,
+        "maxMs": 91.8,
+        "meanMs": 67.823
+      },
+      "stacking": {
+        "medianMs": 50.1,
+        "p95Ms": 64,
+        "maxMs": 72.8,
+        "meanMs": 51.239
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 99.4,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 67.2,
+            "p95Ms": 84,
+            "maxMs": 111.9,
+            "meanMs": 68.539
+          },
+          "stacking": {
+            "medianMs": 50.4,
+            "p95Ms": 63.4,
+            "maxMs": 94.5,
+            "meanMs": 51.842
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 66.9,
+            "p95Ms": 84.7,
+            "maxMs": 91.8,
+            "meanMs": 67.823
+          },
+          "stacking": {
+            "medianMs": 50.1,
+            "p95Ms": 64,
+            "maxMs": 72.8,
+            "meanMs": 51.239
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 67,
+            "p95Ms": 85.6,
+            "maxMs": 89.7,
+            "meanMs": 68.036
+          },
+          "stacking": {
+            "medianMs": 50.1,
+            "p95Ms": 64.8,
+            "maxMs": 72.4,
+            "meanMs": 51.458
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 99.4
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.6,
+        "p95Ms": 17.6,
+        "maxMs": 18.2,
+        "meanMs": 16.664
+      },
+      "stacking": {
+        "medianMs": 1.6,
+        "p95Ms": 1.7,
+        "maxMs": 1.9,
+        "meanMs": 1.642
+      },
+      "framesOver16_7Percent": 48.9,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.6,
+            "p95Ms": 17.6,
+            "maxMs": 18.2,
+            "meanMs": 16.664
+          },
+          "stacking": {
+            "medianMs": 1.6,
+            "p95Ms": 1.7,
+            "maxMs": 1.9,
+            "meanMs": 1.642
+          },
+          "framesOver16_7Percent": 48.9,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.7,
+            "p95Ms": 17.5,
+            "maxMs": 18.2,
+            "meanMs": 16.662
+          },
+          "stacking": {
+            "medianMs": 1.6,
+            "p95Ms": 1.7,
+            "maxMs": 1.8,
+            "meanMs": 1.548
+          },
+          "framesOver16_7Percent": 48.9,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.8,
+            "p95Ms": 17.8,
+            "maxMs": 18.3,
+            "meanMs": 16.668
+          },
+          "stacking": {
+            "medianMs": 1.6,
+            "p95Ms": 1.7,
+            "maxMs": 1.8,
+            "meanMs": 1.648
+          },
+          "framesOver16_7Percent": 51.7,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 16.7,
+        "p95Ms": 18.1,
+        "maxMs": 18.2,
+        "meanMs": 16.665
+      },
+      "stacking": {
+        "medianMs": 4.9,
+        "p95Ms": 5.3,
+        "maxMs": 5.9,
+        "meanMs": 4.952
+      },
+      "framesOver16_7Percent": 51.1,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.7,
+            "p95Ms": 18.1,
+            "maxMs": 18.2,
+            "meanMs": 16.665
+          },
+          "stacking": {
+            "medianMs": 4.9,
+            "p95Ms": 5.3,
+            "maxMs": 5.9,
+            "meanMs": 4.952
+          },
+          "framesOver16_7Percent": 51.1,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 17.5,
+            "maxMs": 18.1,
+            "meanMs": 16.666
+          },
+          "stacking": {
+            "medianMs": 4.9,
+            "p95Ms": 5.4,
+            "maxMs": 5.9,
+            "meanMs": 4.957
+          },
+          "framesOver16_7Percent": 54.4,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.4,
+            "p95Ms": 18.1,
+            "maxMs": 18.3,
+            "meanMs": 16.671
+          },
+          "stacking": {
+            "medianMs": 4.9,
+            "p95Ms": 5.2,
+            "maxMs": 5.8,
+            "meanMs": 4.959
+          },
+          "framesOver16_7Percent": 48.3,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 16.5,
+        "p95Ms": 21.4,
+        "maxMs": 24.5,
+        "meanMs": 17.46
+      },
+      "stacking": {
+        "medianMs": 12.4,
+        "p95Ms": 14.7,
+        "maxMs": 16.3,
+        "meanMs": 12.627
+      },
+      "framesOver16_7Percent": 46.1,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.5,
+            "p95Ms": 21.4,
+            "maxMs": 24.5,
+            "meanMs": 17.46
+          },
+          "stacking": {
+            "medianMs": 12.4,
+            "p95Ms": 14.7,
+            "maxMs": 16.3,
+            "meanMs": 12.627
+          },
+          "framesOver16_7Percent": 46.1,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 17.3,
+            "p95Ms": 21.8,
+            "maxMs": 24.1,
+            "meanMs": 17.987
+          },
+          "stacking": {
+            "medianMs": 12.5,
+            "p95Ms": 15,
+            "maxMs": 18,
+            "meanMs": 12.744
+          },
+          "framesOver16_7Percent": 63.9,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 17,
+            "p95Ms": 21.3,
+            "maxMs": 25.9,
+            "meanMs": 17.834
+          },
+          "stacking": {
+            "medianMs": 12.4,
+            "p95Ms": 14.4,
+            "maxMs": 17.3,
+            "meanMs": 12.722
+          },
+          "framesOver16_7Percent": 55.6,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 34.6,
+        "p95Ms": 41.8,
+        "maxMs": 46.7,
+        "meanMs": 35.452
+      },
+      "stacking": {
+        "medianMs": 24.8,
+        "p95Ms": 29.4,
+        "maxMs": 32.7,
+        "meanMs": 25.266
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 78.3,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 35,
+            "p95Ms": 41.7,
+            "maxMs": 51.1,
+            "meanMs": 35.816
+          },
+          "stacking": {
+            "medianMs": 24.9,
+            "p95Ms": 28.9,
+            "maxMs": 35.6,
+            "meanMs": 25.274
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 78.3
+        },
+        {
+          "frame": {
+            "medianMs": 34.1,
+            "p95Ms": 42.1,
+            "maxMs": 44.2,
+            "meanMs": 35.159
+          },
+          "stacking": {
+            "medianMs": 24.6,
+            "p95Ms": 29.7,
+            "maxMs": 33,
+            "meanMs": 25.113
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 66.7
+        },
+        {
+          "frame": {
+            "medianMs": 34.6,
+            "p95Ms": 41.8,
+            "maxMs": 46.7,
+            "meanMs": 35.452
+          },
+          "stacking": {
+            "medianMs": 24.8,
+            "p95Ms": 29.4,
+            "maxMs": 32.7,
+            "meanMs": 25.266
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 78.3
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 73.8,
+        "p95Ms": 90.2,
+        "maxMs": 123.9,
+        "meanMs": 75.499
+      },
+      "stacking": {
+        "medianMs": 50,
+        "p95Ms": 61,
+        "maxMs": 100,
+        "meanMs": 51.505
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 99.4,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 73.4,
+            "p95Ms": 87.3,
+            "maxMs": 113.7,
+            "meanMs": 74.611
+          },
+          "stacking": {
+            "medianMs": 49.8,
+            "p95Ms": 59.9,
+            "maxMs": 90.2,
+            "meanMs": 51.176
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 73.8,
+            "p95Ms": 90.2,
+            "maxMs": 123.9,
+            "meanMs": 75.499
+          },
+          "stacking": {
+            "medianMs": 50,
+            "p95Ms": 61,
+            "maxMs": 100,
+            "meanMs": 51.505
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 72.8,
+            "p95Ms": 92.5,
+            "maxMs": 119.1,
+            "meanMs": 74.779
+          },
+          "stacking": {
+            "medianMs": 49.6,
+            "p95Ms": 63.3,
+            "maxMs": 96.5,
+            "meanMs": 51.526
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 99.4
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.6,
+        "p95Ms": 18.1,
+        "maxMs": 18.3,
+        "meanMs": 16.668
+      },
+      "stacking": {
+        "medianMs": 1.8,
+        "p95Ms": 2,
+        "maxMs": 2,
+        "meanMs": 1.733
+      },
+      "framesOver16_7Percent": 49.4,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.6,
+            "p95Ms": 17.5,
+            "maxMs": 18.2,
+            "meanMs": 16.669
+          },
+          "stacking": {
+            "medianMs": 1.9,
+            "p95Ms": 2.1,
+            "maxMs": 2.2,
+            "meanMs": 1.916
+          },
+          "framesOver16_7Percent": 49.4,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.6,
+            "p95Ms": 18.1,
+            "maxMs": 18.3,
+            "meanMs": 16.668
+          },
+          "stacking": {
+            "medianMs": 1.8,
+            "p95Ms": 2,
+            "maxMs": 2,
+            "meanMs": 1.733
+          },
+          "framesOver16_7Percent": 49.4,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.5,
+            "p95Ms": 18.1,
+            "maxMs": 18.5,
+            "meanMs": 16.662
+          },
+          "stacking": {
+            "medianMs": 1.8,
+            "p95Ms": 1.9,
+            "maxMs": 2,
+            "meanMs": 1.843
+          },
+          "framesOver16_7Percent": 47.2,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 16.4,
+        "p95Ms": 18,
+        "maxMs": 18.3,
+        "meanMs": 16.665
+      },
+      "stacking": {
+        "medianMs": 5.2,
+        "p95Ms": 5.5,
+        "maxMs": 6.5,
+        "meanMs": 5.187
+      },
+      "framesOver16_7Percent": 50,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 18,
+            "maxMs": 18.4,
+            "meanMs": 16.668
+          },
+          "stacking": {
+            "medianMs": 5.2,
+            "p95Ms": 5.5,
+            "maxMs": 6.7,
+            "meanMs": 5.189
+          },
+          "framesOver16_7Percent": 52.2,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.8,
+            "p95Ms": 18.1,
+            "maxMs": 18.4,
+            "meanMs": 16.67
+          },
+          "stacking": {
+            "medianMs": 5.2,
+            "p95Ms": 5.5,
+            "maxMs": 6.8,
+            "meanMs": 5.197
+          },
+          "framesOver16_7Percent": 51.1,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.4,
+            "p95Ms": 18,
+            "maxMs": 18.3,
+            "meanMs": 16.665
+          },
+          "stacking": {
+            "medianMs": 5.2,
+            "p95Ms": 5.5,
+            "maxMs": 6.5,
+            "meanMs": 5.187
+          },
+          "framesOver16_7Percent": 50,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 17,
+        "p95Ms": 21.7,
+        "maxMs": 29.8,
+        "meanMs": 17.975
+      },
+      "stacking": {
+        "medianMs": 12.6,
+        "p95Ms": 14.9,
+        "maxMs": 16.2,
+        "meanMs": 12.906
+      },
+      "framesOver16_7Percent": 67.2,
+      "framesOver33_3Percent": 0,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 17,
+            "p95Ms": 21.7,
+            "maxMs": 29.8,
+            "meanMs": 17.975
+          },
+          "stacking": {
+            "medianMs": 12.6,
+            "p95Ms": 14.9,
+            "maxMs": 16.2,
+            "meanMs": 12.906
+          },
+          "framesOver16_7Percent": 67.2,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 17.5,
+            "p95Ms": 22.2,
+            "maxMs": 27.1,
+            "meanMs": 18.411
+          },
+          "stacking": {
+            "medianMs": 12.7,
+            "p95Ms": 15.2,
+            "maxMs": 21.7,
+            "meanMs": 13.123
+          },
+          "framesOver16_7Percent": 78.3,
+          "framesOver33_3Percent": 0
+        },
+        {
+          "frame": {
+            "medianMs": 16.9,
+            "p95Ms": 21.6,
+            "maxMs": 23,
+            "meanMs": 17.651
+          },
+          "stacking": {
+            "medianMs": 12.6,
+            "p95Ms": 15,
+            "maxMs": 16.3,
+            "meanMs": 12.831
+          },
+          "framesOver16_7Percent": 63.3,
+          "framesOver33_3Percent": 0
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 35.1,
+        "p95Ms": 43.3,
+        "maxMs": 52,
+        "meanMs": 36.046
+      },
+      "stacking": {
+        "medianMs": 25.1,
+        "p95Ms": 28.8,
+        "maxMs": 38.5,
+        "meanMs": 25.478
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 78.3,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 34,
+            "p95Ms": 43.5,
+            "maxMs": 48.2,
+            "meanMs": 35.471
+          },
+          "stacking": {
+            "medianMs": 24.9,
+            "p95Ms": 30.1,
+            "maxMs": 33.5,
+            "meanMs": 25.424
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 70
+        },
+        {
+          "frame": {
+            "medianMs": 35.1,
+            "p95Ms": 43.3,
+            "maxMs": 52,
+            "meanMs": 36.046
+          },
+          "stacking": {
+            "medianMs": 25.1,
+            "p95Ms": 28.8,
+            "maxMs": 38.5,
+            "meanMs": 25.478
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 78.3
+        },
+        {
+          "frame": {
+            "medianMs": 33.8,
+            "p95Ms": 42.3,
+            "maxMs": 45.7,
+            "meanMs": 35.275
+          },
+          "stacking": {
+            "medianMs": 24.8,
+            "p95Ms": 29,
+            "maxMs": 31.7,
+            "meanMs": 25.206
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 67.8
+        }
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 72.5,
+        "p95Ms": 86.3,
+        "maxMs": 94.3,
+        "meanMs": 73.372
+      },
+      "stacking": {
+        "medianMs": 49.5,
+        "p95Ms": 57.5,
+        "maxMs": 64.7,
+        "meanMs": 50.192
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 99.4,
+      "runs": [
+        {
+          "frame": {
+            "medianMs": 72.3,
+            "p95Ms": 87.2,
+            "maxMs": 99.1,
+            "meanMs": 73.459
+          },
+          "stacking": {
+            "medianMs": 49.2,
+            "p95Ms": 59.4,
+            "maxMs": 64.1,
+            "meanMs": 50.122
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 72.5,
+            "p95Ms": 86.3,
+            "maxMs": 94.3,
+            "meanMs": 73.372
+          },
+          "stacking": {
+            "medianMs": 49.5,
+            "p95Ms": 57.5,
+            "maxMs": 64.7,
+            "meanMs": 50.192
+          },
+          "framesOver16_7Percent": 99.4,
+          "framesOver33_3Percent": 99.4
+        },
+        {
+          "frame": {
+            "medianMs": 72.4,
+            "p95Ms": 84.7,
+            "maxMs": 97.4,
+            "meanMs": 72.943
+          },
+          "stacking": {
+            "medianMs": 49.2,
+            "p95Ms": 56.9,
+            "maxMs": 66.5,
+            "meanMs": 49.916
+          },
+          "framesOver16_7Percent": 100,
+          "framesOver33_3Percent": 99.4
+        }
+      ]
+    }
+  ]
+}

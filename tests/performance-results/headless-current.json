@@ -1,0 +1,451 @@
+{
+  "generatedAt": "2026-09-12T10:34:06.649Z",
+  "revision": "5897ab3",
+  "mode": "headless",
+  "chrome": "Chrome/152.0.7977.84",
+  "framesPerCase": 180,
+  "fixture": "Deterministic local SVG thumbnails; spread and >=50% same-year dense scenarios.",
+  "caveat": "Desktop and mobile presets are automated Chrome runs. Mobile emulation is not a physical-phone result.",
+  "results": [
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.8,
+        "p95Ms": 17.9,
+        "maxMs": 18.4,
+        "meanMs": 16.666
+      },
+      "stacking": {
+        "medianMs": 2.5,
+        "p95Ms": 2.8,
+        "maxMs": 3.6,
+        "meanMs": 2.572
+      },
+      "framesOver16_7Percent": 55,
+      "framesOver33_3Percent": 0
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 16.9,
+        "p95Ms": 18.1,
+        "maxMs": 19.1,
+        "meanMs": 16.671
+      },
+      "stacking": {
+        "medianMs": 11.6,
+        "p95Ms": 14.2,
+        "maxMs": 16.6,
+        "meanMs": 11.499
+      },
+      "framesOver16_7Percent": 57.2,
+      "framesOver33_3Percent": 0
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 37.9,
+        "p95Ms": 45.2,
+        "maxMs": 59.3,
+        "meanMs": 37.993
+      },
+      "stacking": {
+        "medianMs": 33.5,
+        "p95Ms": 39.7,
+        "maxMs": 55.8,
+        "meanMs": 33.537
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 87.2
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 85.1,
+        "p95Ms": 98.8,
+        "maxMs": 114.2,
+        "meanMs": 84.041
+      },
+      "stacking": {
+        "medianMs": 76.2,
+        "p95Ms": 91.1,
+        "maxMs": 100.4,
+        "meanMs": 75.714
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 99.4
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "spread",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 217.7,
+        "p95Ms": 254.8,
+        "maxMs": 335.4,
+        "meanMs": 215.601
+      },
+      "stacking": {
+        "medianMs": 198.7,
+        "p95Ms": 239.1,
+        "maxMs": 318.2,
+        "meanMs": 198.035
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 99.4
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.7,
+        "p95Ms": 17.8,
+        "maxMs": 21.8,
+        "meanMs": 16.667
+      },
+      "stacking": {
+        "medianMs": 3.3,
+        "p95Ms": 3.5,
+        "maxMs": 4.2,
+        "meanMs": 3.291
+      },
+      "framesOver16_7Percent": 48.9,
+      "framesOver33_3Percent": 0
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 16.4,
+        "p95Ms": 19,
+        "maxMs": 20.6,
+        "meanMs": 16.667
+      },
+      "stacking": {
+        "medianMs": 13.1,
+        "p95Ms": 14.5,
+        "maxMs": 18.4,
+        "meanMs": 12.956
+      },
+      "framesOver16_7Percent": 46.1,
+      "framesOver33_3Percent": 0
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 38.5,
+        "p95Ms": 45.6,
+        "maxMs": 65.2,
+        "meanMs": 38.492
+      },
+      "stacking": {
+        "medianMs": 34.1,
+        "p95Ms": 40.6,
+        "maxMs": 60.3,
+        "meanMs": 33.802
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 81.1
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 85.5,
+        "p95Ms": 118.2,
+        "maxMs": 128.7,
+        "meanMs": 85.973
+      },
+      "stacking": {
+        "medianMs": 76.9,
+        "p95Ms": 107.1,
+        "maxMs": 117.5,
+        "meanMs": 77.791
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 99.4
+    },
+    {
+      "device": "desktop",
+      "viewport": "1418x802@1x",
+      "scenario": "dense",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 225.1,
+        "p95Ms": 253.3,
+        "maxMs": 404.8,
+        "meanMs": 226.912
+      },
+      "stacking": {
+        "medianMs": 205.9,
+        "p95Ms": 238.5,
+        "maxMs": 385.1,
+        "meanMs": 209.771
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 99.4
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.7,
+        "p95Ms": 18,
+        "maxMs": 21,
+        "meanMs": 16.666
+      },
+      "stacking": {
+        "medianMs": 2.6,
+        "p95Ms": 3.5,
+        "maxMs": 4.2,
+        "meanMs": 2.716
+      },
+      "framesOver16_7Percent": 48.3,
+      "framesOver33_3Percent": 0
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 18.5,
+        "p95Ms": 24.5,
+        "maxMs": 44.3,
+        "meanMs": 18.972
+      },
+      "stacking": {
+        "medianMs": 14.1,
+        "p95Ms": 16.8,
+        "maxMs": 28.7,
+        "meanMs": 13.951
+      },
+      "framesOver16_7Percent": 73.9,
+      "framesOver33_3Percent": 0.6
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 38.4,
+        "p95Ms": 45.2,
+        "maxMs": 74.4,
+        "meanMs": 38.371
+      },
+      "stacking": {
+        "medianMs": 33.2,
+        "p95Ms": 38.5,
+        "maxMs": 66.9,
+        "meanMs": 32.879
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 81.7
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 90.1,
+        "p95Ms": 104.2,
+        "maxMs": 117.2,
+        "meanMs": 88.119
+      },
+      "stacking": {
+        "medianMs": 78.3,
+        "p95Ms": 90.2,
+        "maxMs": 107.2,
+        "meanMs": 76.961
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 99.4
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "spread",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 220.5,
+        "p95Ms": 248,
+        "maxMs": 296,
+        "meanMs": 216.955
+      },
+      "stacking": {
+        "medianMs": 195.1,
+        "p95Ms": 222.1,
+        "maxMs": 268.4,
+        "meanMs": 193.22
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 99.4
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 26,
+      "renderedItems": 26,
+      "domElements": 388,
+      "frame": {
+        "medianMs": 16.8,
+        "p95Ms": 18,
+        "maxMs": 19.5,
+        "meanMs": 16.659
+      },
+      "stacking": {
+        "medianMs": 3.2,
+        "p95Ms": 3.4,
+        "maxMs": 3.6,
+        "meanMs": 3.152
+      },
+      "framesOver16_7Percent": 56.7,
+      "framesOver33_3Percent": 0
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 100,
+      "renderedItems": 100,
+      "domElements": 1276,
+      "frame": {
+        "medianMs": 16.8,
+        "p95Ms": 18.8,
+        "maxMs": 20.6,
+        "meanMs": 16.675
+      },
+      "stacking": {
+        "medianMs": 12.5,
+        "p95Ms": 15.4,
+        "maxMs": 17,
+        "meanMs": 12.326
+      },
+      "framesOver16_7Percent": 50.6,
+      "framesOver33_3Percent": 0
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 250,
+      "renderedItems": 250,
+      "domElements": 3076,
+      "frame": {
+        "medianMs": 39.9,
+        "p95Ms": 47.9,
+        "maxMs": 61.3,
+        "meanMs": 40.038
+      },
+      "stacking": {
+        "medianMs": 33.6,
+        "p95Ms": 41.6,
+        "maxMs": 54.5,
+        "meanMs": 34.007
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 92.2
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 500,
+      "renderedItems": 500,
+      "domElements": 6076,
+      "frame": {
+        "medianMs": 91.3,
+        "p95Ms": 123.1,
+        "maxMs": 144.9,
+        "meanMs": 92.821
+      },
+      "stacking": {
+        "medianMs": 79,
+        "p95Ms": 109.3,
+        "maxMs": 131.6,
+        "meanMs": 81.454
+      },
+      "framesOver16_7Percent": 99.4,
+      "framesOver33_3Percent": 99.4
+    },
+    {
+      "device": "mobile",
+      "viewport": "390x844@3x",
+      "scenario": "dense",
+      "items": 1000,
+      "renderedItems": 1000,
+      "domElements": 12076,
+      "frame": {
+        "medianMs": 240.5,
+        "p95Ms": 264.8,
+        "maxMs": 432.4,
+        "meanMs": 238.486
+      },
+      "stacking": {
+        "medianMs": 215.2,
+        "p95Ms": 236,
+        "maxMs": 399.8,
+        "meanMs": 214.894
+      },
+      "framesOver16_7Percent": 100,
+      "framesOver33_3Percent": 99.4
+    }
+  ]
+}
