@@ -92,6 +92,7 @@ const TIMELINE_CONFIG = deepFreeze({
     },
     image: {
         minAspectRatio: 0.70,
+        maxConcurrentLoads: 3,
     },
     culling: {
         viewportBufferRatio: 0.5,
@@ -161,7 +162,7 @@ const {
     velocitySmoothingPrevious,
     velocitySmoothingCurrent,
 } = TIMELINE_CONFIG.touch;
-const { minAspectRatio } = TIMELINE_CONFIG.image;
+const { minAspectRatio, maxConcurrentLoads } = TIMELINE_CONFIG.image;
 const { viewportBufferRatio, imageLoadBufferRatio } = TIMELINE_CONFIG.culling;
 
 function getCssTimeMs(customProperty) {
@@ -189,9 +190,15 @@ let loadedContexts = [];
 let stackingLayoutRebuildQueued = false;
 let imageSettlementQueued = false;
 const pendingImageSettlements = new Set();
+let activeImageLoads = 0;
+const deferredImageQueue = [];
 
 const viewport = document.getElementById('viewport');
 const gridTrack = document.getElementById('grid-track');
+const centuryGridLayer = document.getElementById('century-grid-layer');
+const halfCenturyGridLayer = document.getElementById('half-century-grid-layer');
+const decadeGridLayer = document.getElementById('decade-grid-layer');
+const annualGridLayer = document.getElementById('annual-grid-layer');
 const track = document.getElementById('track');
 
 const worldEventsTrack = document.createElement('div');
@@ -216,7 +223,6 @@ function setAppStatus(message, { error = false, retry = false, hidden = false } 
 function clearRenderedTimeline() {
     track.querySelectorAll('.timeline-item, .year-label')
         .forEach(element => element.remove());
-    gridTrack.replaceChildren();
     worldEventsTrack.replaceChildren();
     culturalErasTrack.replaceChildren();
     loadedItems = [];
@@ -265,10 +271,6 @@ function renderGridLines() {
     for (let year = minYear; year <= maxYear; year++) {
         const xPos = (year - minYear) * pixelsPerYear;
         
-        // Draw the line
-        const line = document.createElement('div');
-        line.style.left = `${xPos}px`;
-        
         // Draw the year label
         const label = document.createElement('div');
         label.className = 'year-label';
@@ -277,20 +279,15 @@ function renderGridLines() {
         
         // Apply classes
         if (year % 100 === 0) {
-            line.className = 'century-line';
             label.style.fontWeight = '700'; 
         } else if (year % 50 === 0) {
-            line.className = 'half-century-line';
             label.style.fontWeight = '400';
         } else if (year % 10 === 0) {
-            line.className = 'decade-line';
             label.className = 'year-label decade-year-label';
         } else {
-            line.className = 'single-year-line';
             label.className = 'year-label single-year-label';
         }
         
-        gridTrack.appendChild(line);
         track.appendChild(label);
     }
 }
@@ -317,7 +314,6 @@ function buildTimelineMedia(item) {
 function renderItems(items) {
     const timelineWidth = `${(maxYear - minYear) * pixelsPerYear}px`;
     track.style.width = timelineWidth;
-    gridTrack.style.width = timelineWidth;
     items.forEach(item => {
         const xPos = (item.year - minYear) * pixelsPerYear;
 
@@ -833,8 +829,27 @@ function getViewportWorldBounds(bufferRatio) {
 }
 
 function loadDeferredImage(imageElement) {
-    if (!imageElement || imageElement.hasAttribute('src') || !imageElement.dataset.src) return;
-    imageElement.src = imageElement.dataset.src;
+    if (!imageElement || imageElement.hasAttribute('src') || !imageElement.dataset.src || imageElement.dataset.loadState) return;
+    imageElement.dataset.loadState = 'queued';
+    deferredImageQueue.push(imageElement);
+    pumpDeferredImageQueue();
+}
+
+function pumpDeferredImageQueue() {
+    while (activeImageLoads < maxConcurrentLoads && deferredImageQueue.length) {
+        const imageElement = deferredImageQueue.shift();
+        if (imageElement.isConnected === false || imageElement.hasAttribute('src')) continue;
+        imageElement.dataset.loadState = 'active';
+        activeImageLoads++;
+        imageElement.src = imageElement.dataset.src;
+    }
+}
+
+function releaseDeferredImageRequest(imageElement) {
+    if (imageElement?.dataset?.loadState !== 'active') return;
+    imageElement.dataset.loadState = 'settled';
+    activeImageLoads = Math.max(0, activeImageLoads - 1);
+    pumpDeferredImageQueue();
 }
 
 function setCulledState(item, isCulled) {
@@ -867,6 +882,21 @@ function updateLevelOfDetail() {
     });
 }
 
+function setGridLayerGeometry(layer, yearInterval) {
+    const spacing = pixelsPerYear * yearInterval * scale;
+    const firstYear = Math.ceil(minYear / yearInterval) * yearInterval;
+    const firstLineX = translateX + ((firstYear - minYear) * pixelsPerYear * scale);
+    layer.style.backgroundSize = `${spacing}px 100%`;
+    layer.style.backgroundPositionX = `${firstLineX}px`;
+}
+
+function updateGridLayers() {
+    setGridLayerGeometry(centuryGridLayer, 100);
+    setGridLayerGeometry(halfCenturyGridLayer, 50);
+    setGridLayerGeometry(decadeGridLayer, 10);
+    setGridLayerGeometry(annualGridLayer, 1);
+}
+
 function updateViewportCulling() {
     const visibleBounds = getViewportWorldBounds(viewportBufferRatio);
     const imageBounds = getViewportWorldBounds(imageLoadBufferRatio);
@@ -893,9 +923,8 @@ function updateViewportCulling() {
 // --- 5. UPDATE SCREEN ---
 function updateTransform() {
     track.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-    gridTrack.style.transform = `translate(${translateX}px, ${translateY}px) scaleX(${scale})`;
     track.style.setProperty('--inv-scale', 1 / scale);
-    gridTrack.style.setProperty('--inv-scale', 1 / scale);
+    updateGridLayers();
 
     // THE FIX: Starts growing gently the exact moment you zoom in from 0.02.
     // The 0.6 determines the intensity. Lower it to 0.4 for less growth, or raise to 0.8 for more.
@@ -1150,9 +1179,8 @@ function renderLoop() {
         translateX += diffX * glideSpeed;
 
         track.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-        gridTrack.style.transform = `translate(${translateX}px, ${translateY}px) scaleX(${scale})`;
         track.style.setProperty('--inv-scale', 1 / scale);
-        gridTrack.style.setProperty('--inv-scale', 1 / scale);
+        updateGridLayers();
        // THE FIX: Changed / 0.2 to / 0.1 so it ramps up to full opacity twice as fast
         track.style.setProperty('--detail-opacity', Math.max(0, Math.min(1, (scale - opacityStartScale) / opacityFadeRange)));
         
@@ -1194,14 +1222,17 @@ function setImageMediaState(img, state) {
 }
 
 window.handleContextImageLoad = function(img) {
+    releaseDeferredImageRequest(img);
     setImageMediaState(img, 'loaded');
 };
 
 window.handleContextImageError = function(img) {
+    releaseDeferredImageRequest(img);
     setImageMediaState(img, 'error');
 };
 
 window.handleImageError = function(img) {
+    releaseDeferredImageRequest(img);
     setImageMediaState(img, 'error');
 
     const item = img.closest('.timeline-item')?.timelineItem;
@@ -1216,6 +1247,8 @@ window.handleImageLoad = async function(img) {
     } catch {
         // The load event still confirms a drawable fallback if decode is unsupported or rejects.
     }
+
+    releaseDeferredImageRequest(img);
 
     const aspect = img.naturalWidth / img.naturalHeight;
     

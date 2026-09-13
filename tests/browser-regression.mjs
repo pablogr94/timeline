@@ -44,20 +44,30 @@ async function runDesktop(connection) {
     await connection.send('Emulation.setTouchEmulationEnabled', { enabled: false });
     await navigateForTest(connection);
 
-    const decadeGrid = await evaluate(connection, `(() => {
-        const lines = document.querySelectorAll('.decade-line');
-        const halfCenturyLines = document.querySelectorAll('.half-century-line');
+    const grid = await evaluate(connection, `(() => {
+        const ids = ['century-grid-layer', 'half-century-grid-layer', 'decade-grid-layer', 'annual-grid-layer'];
         return {
-            count: lines.length,
-            halfCenturyCount: halfCenturyLines.length,
-            height: lines[0].getBoundingClientRect().height,
-            layoutHeight: Number.parseFloat(getComputedStyle(lines[0]).height),
+            layers: ids.map(id => {
+                const element = document.getElementById(id);
+                const style = getComputedStyle(element);
+                return {
+                    id,
+                    height: element.getBoundingClientRect().height,
+                    backgroundImage: style.backgroundImage,
+                    backgroundSize: style.backgroundSize,
+                };
+            }),
+            oldLineElements: document.querySelectorAll('.century-line, .half-century-line, .decade-line, .single-year-line').length,
+            decadeLabels: document.querySelectorAll('.decade-year-label').length,
         };
     })()`);
-    assert.equal(decadeGrid.count, 24, '10-year detail lines should remain rendered for LOD');
-    assert.equal(decadeGrid.halfCenturyCount, 3, '50-year overview lines should always be rendered');
-    assert.ok(decadeGrid.height >= 1600, 'decade grid lines should cross the full desktop viewport');
-    assert.ok(decadeGrid.layoutHeight <= 1700, 'grid layout height should remain below GPU-unsafe counter-scaled sizes');
+    assert.equal(grid.layers.length, 4, 'four screen-space grid layers should render');
+    assert.equal(grid.oldLineElements, 0, 'the grid should not create hundreds of line elements');
+    assert.equal(grid.decadeLabels, 24, '10-year labels should remain available for LOD');
+    grid.layers.forEach(layer => {
+        assert.equal(layer.height, 802, `${layer.id} should stay viewport-height`);
+        assert.notEqual(layer.backgroundImage, 'none', `${layer.id} should render its line pattern`);
+    });
 
     const mediaStates = await evaluate(connection, `(() => {
         const placeholders = [...document.querySelectorAll('.timeline-item .is-image-missing')];

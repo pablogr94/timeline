@@ -134,7 +134,6 @@ body, html {
     outline: none;
 }
 
-#grid-track,
 #track {
     position: absolute;
     top: 50%; 
@@ -145,8 +144,11 @@ body, html {
 }
 
 #grid-track {
+    position: absolute;
+    inset: 0;
     z-index: 0;
     pointer-events: none;
+    overflow: hidden;
 }
 
 #track {
@@ -165,53 +167,38 @@ body, html {
     transform: scaleY(var(--inv-scale, 1));
 }
 
-.century-line {
+.grid-layer {
     position: absolute;
-    top: -100vh;
-    height: 200vh;
-    width: 0;
-    border-left: 1px solid var(--century-grid-color);
-    z-index: 1;
+    inset: 0;
+    background-image: linear-gradient(to right, var(--grid-color) 0 1px, transparent 1px 100%);
+    background-repeat: repeat-x;
+    background-position-y: 0;
     pointer-events: none;
-    
-    /* The grid parent scales horizontally only, so viewport height stays GPU-safe. */
-    transform: scaleX(var(--inv-scale, 1)); 
+    will-change: background-position, background-size, opacity;
 }
 
-.half-century-line {
-    position: absolute;
-    top: -100vh;
-    height: 200vh;
-    width: 0;
-    border-left: 1px solid var(--half-century-grid-color);
-    z-index: 1;
-    pointer-events: none;
-    transform: scaleX(var(--inv-scale, 1));
+#century-grid-layer {
+    --grid-color: var(--century-grid-color);
+    z-index: 3;
 }
 
-.decade-line {
-    position: absolute;
-    top: -100vh;
-    height: 200vh;
-    width: 0;
-    border-left: 1px dashed var(--decade-grid-color);
-    z-index: 0; 
-    pointer-events: none;
-    transform: scaleX(var(--inv-scale, 1));
+#half-century-grid-layer {
+    --grid-color: var(--half-century-grid-color);
+    z-index: 2;
+}
+
+#decade-grid-layer {
+    --grid-color: var(--decade-grid-color);
+    z-index: 1;
     opacity: var(--decade-grid-opacity, 0);
+    mask-image: repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 9px);
 }
 
-/* --- NEW: Single Year Grid Lines --- */
-.single-year-line {
-    position: absolute;
-    top: -100vh;
-    height: 200vh;
-    width: 0;
-    border-left: 1px dotted var(--annual-grid-color);
-    z-index: 0; 
-    pointer-events: none;
-    transform: scaleX(var(--inv-scale, 1)); 
+#annual-grid-layer {
+    --grid-color: var(--annual-grid-color);
+    z-index: 0;
     opacity: var(--annual-grid-opacity, 0);
+    mask-image: repeating-linear-gradient(to bottom, #000 0 1px, transparent 1px 4px);
 }
 
 /* Make single year numbers softer than decades */

@@ -20,7 +20,12 @@
     </div>
 
     <div id="viewport">
-        <div id="grid-track"></div>
+        <div id="grid-track" aria-hidden="true">
+            <div id="annual-grid-layer" class="grid-layer"></div>
+            <div id="decade-grid-layer" class="grid-layer"></div>
+            <div id="half-century-grid-layer" class="grid-layer"></div>
+            <div id="century-grid-layer" class="grid-layer"></div>
+        </div>
         <div id="track">
             <div id="center-line"></div>
             <!-- JavaScript will inject items here -->

@@ -243,6 +243,23 @@ test('timeline and context thumbnails are created without eager src attributes',
     assert.match(css, /\.is-culled\s*{/);
 });
 
+test('deferred image loading caps concurrent requests and advances the queue on settlement', () => {
+    const context = loadRuntime();
+    const images = Array.from({ length: 4 }, (_, index) => ({
+        dataset: { src: `image-${index}.jpg` },
+        hasAttribute(name) {
+            return name === 'src' && Boolean(this.src);
+        },
+    }));
+    context.testImages = images;
+
+    vm.runInContext('testImages.forEach(loadDeferredImage)', context);
+    assert.deepEqual(images.map(image => image.src || null), ['image-0.jpg', 'image-1.jpg', 'image-2.jpg', null]);
+
+    vm.runInContext('releaseDeferredImageRequest(testImages[0])', context);
+    assert.equal(images[3].src, 'image-3.jpg');
+});
+
 test('image-less timeline items render a deliberate fixed-width placeholder', () => {
     const context = loadRuntime();
     context.testItem = { title: 'Nakagin Capsule Tower', image: '' };
@@ -433,7 +450,7 @@ test('render reset removes previously generated timeline and context elements', 
     ];
     vm.runInContext(`
         track.querySelectorAll = () => testNodes;
-        gridTrack.replaceChildren = () => { globalThis.gridTrackCleared = true; };
+
         worldEventsTrack.replaceChildren = () => { globalThis.worldTrackCleared = true; };
         culturalErasTrack.replaceChildren = () => { globalThis.cultureTrackCleared = true; };
         loadedItems = [{}];
@@ -442,7 +459,7 @@ test('render reset removes previously generated timeline and context elements', 
     `, context);
 
     assert.equal(removed, 3);
-    assert.equal(context.gridTrackCleared, true);
+
     assert.equal(context.worldTrackCleared, true);
     assert.equal(context.cultureTrackCleared, true);
     assert.equal(vm.runInContext('loadedItems.length', context), 0);
@@ -514,7 +531,7 @@ test('settled camera applies the exact final LOD threshold', () => {
     assert.equal(classes.has('is-lod-hidden'), false);
 });
 
-test('grid LOD creates annual marks separately from decade and century marks', () => {
+test('grid LOD keeps year labels while line marks use four fixed layers', () => {
     const context = loadRuntime();
     const created = [];
     context.document.createElement = () => {
@@ -525,11 +542,9 @@ test('grid LOD creates annual marks separately from decade and century marks', (
 
     vm.runInContext('renderGridLines()', context);
 
-    assert.equal(created.filter(element => element.className === 'century-line').length, 4);
-    assert.equal(created.filter(element => element.className === 'half-century-line').length, 3);
-    assert.equal(created.filter(element => element.className === 'decade-line').length, 24);
+    assert.equal(created.filter(element => element.className.endsWith('-line')).length, 0);
+    assert.equal(created.filter(element => element.className === 'year-label').length, 7);
     assert.equal(created.filter(element => element.className === 'year-label decade-year-label').length, 24);
-    assert.equal(created.filter(element => element.className === 'single-year-line').length, 270);
     assert.equal(created.filter(element => element.className === 'year-label single-year-label').length, 270);
 });
 
@@ -602,17 +617,19 @@ test('standard thumbnails preload before their reveal threshold', () => {
 test('grid lines keep fixed viewport height outside vertical camera scaling', () => {
     const script = fs.readFileSync(new URL('../script.js', import.meta.url), 'utf8');
     const css = fs.readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+    const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
     assert.match(script, /const gridTrack = document\.getElementById\('grid-track'\)/);
-    assert.match(script, /gridTrack\.appendChild\(line\)/);
-    assert.match(script, /gridTrack\.style\.transform = `translate\(\$\{translateX}px, \$\{translateY}px\) scaleX\(\$\{scale\}\)`/);
+    assert.match(script, /function updateGridLayers\(\)/);
+    assert.doesNotMatch(script, /gridTrack\.appendChild\(line\)/);
 
-    for (const selector of ['century-line', 'half-century-line', 'decade-line', 'single-year-line']) {
-        const block = css.match(new RegExp(`\\.${selector}\\s*\\{([^}]*)\\}`, 's'))?.[1] || '';
-        assert.match(block, /top:\s*-100vh/);
-        assert.match(block, /height:\s*200vh/);
-        assert.doesNotMatch(block, /calc\([^;]*--inv-scale/);
+    for (const id of ['century-grid-layer', 'half-century-grid-layer', 'decade-grid-layer', 'annual-grid-layer']) {
+        assert.match(html, new RegExp(`id=["']${id}["']`));
     }
+
+    const gridBlock = css.match(/#grid-track\s*\{([^}]*)\}/s)?.[1] || '';
+    assert.match(gridBlock, /inset:\s*0/);
+    assert.doesNotMatch(gridBlock, /width:\s*30000px/);
 });
 
 test('maximum zoom-out shows 50-year marks before decade detail', () => {
@@ -628,19 +645,19 @@ test('maximum zoom-out shows 50-year marks before decade detail', () => {
     assert.equal(trackStyle.properties.get('--decade-label-opacity'), '1');
 
     const css = fs.readFileSync(new URL('../style.css', import.meta.url), 'utf8');
-    const halfCenturyBlock = css.match(/\.half-century-line\s*\{([^}]*)\}/s)?.[1] || '';
-    const decadeBlock = css.match(/\.decade-line\s*\{([^}]*)\}/s)?.[1] || '';
-    assert.doesNotMatch(halfCenturyBlock, /opacity:/);
+    const halfCenturyBlock = css.match(/#half-century-grid-layer\s*\{([^}]*)\}/s)?.[1] || '';
+    const decadeBlock = css.match(/#decade-grid-layer\s*\{([^}]*)\}/s)?.[1] || '';
+    assert.match(halfCenturyBlock, /--grid-color:\s*var\(--half-century-grid-color\)/);
     assert.match(decadeBlock, /opacity:\s*var\(--decade-grid-opacity, 0\)/);
 });
 
 test('overview grid lines use solid strokes that survive minimum zoom', () => {
     const css = fs.readFileSync(new URL('../style.css', import.meta.url), 'utf8');
-    const centuryBlock = css.match(/\.century-line\s*\{([^}]*)\}/s)?.[1] || '';
-    const halfCenturyBlock = css.match(/\.half-century-line\s*\{([^}]*)\}/s)?.[1] || '';
+    const centuryBlock = css.match(/#century-grid-layer\s*\{([^}]*)\}/s)?.[1] || '';
+    const halfCenturyBlock = css.match(/#half-century-grid-layer\s*\{([^}]*)\}/s)?.[1] || '';
 
-    assert.match(centuryBlock, /border-left:\s*1px solid var\(--century-grid-color\)/);
-    assert.match(halfCenturyBlock, /border-left:\s*1px solid var\(--half-century-grid-color\)/);
+    assert.match(centuryBlock, /--grid-color:\s*var\(--century-grid-color\)/);
+    assert.match(halfCenturyBlock, /--grid-color:\s*var\(--half-century-grid-color\)/);
     assert.match(css, /--century-grid-color:\s*rgba\(0, 0, 0, 0\.20\)/);
     assert.match(css, /--half-century-grid-color:\s*rgba\(0, 0, 0, 0\.14\)/);
 });
