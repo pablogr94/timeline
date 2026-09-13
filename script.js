@@ -43,6 +43,16 @@ const TIMELINE_CONFIG = deepFreeze({
         opacityStartScale: 0.1,
         opacityFadeRange: 0.1,
     },
+    lod: {
+        standardItemRevealScale: 0.06,
+        standardItemPreloadScale: 0.045,
+        decadeFadeStartScale: 0.025,
+        decadeFullScale: 0.06,
+        annualLineFadeStartScale: 0.06,
+        annualLineFullScale: 0.12,
+        annualLabelFadeStartScale: 0.14,
+        annualLabelFullScale: 0.24,
+    },
     layout: {
         verticalOffsetStep: 50,
         contextLaneStep: 45,
@@ -108,6 +118,16 @@ const {
 } = TIMELINE_CONFIG.camera;
 const { itemZoomMultiplier, opacityStartScale, opacityFadeRange } = TIMELINE_CONFIG.detail;
 const {
+    standardItemRevealScale,
+    standardItemPreloadScale,
+    decadeFadeStartScale,
+    decadeFullScale,
+    annualLineFadeStartScale,
+    annualLineFullScale,
+    annualLabelFadeStartScale,
+    annualLabelFullScale,
+} = TIMELINE_CONFIG.lod;
+const {
     verticalOffsetStep,
     contextLaneStep,
     contextLaneBuffer,
@@ -167,6 +187,8 @@ let startX;
 let loadedItems = [];
 let loadedContexts = [];
 let stackingLayoutRebuildQueued = false;
+let imageSettlementQueued = false;
+const pendingImageSettlements = new Set();
 
 const viewport = document.getElementById('viewport');
 const track = document.getElementById('track');
@@ -179,37 +201,66 @@ const culturalErasTrack = document.createElement('div');
 culturalErasTrack.id = 'cultural-eras-track';
 track.appendChild(culturalErasTrack);
 
+function setAppStatus(message, { error = false, retry = false, hidden = false } = {}) {
+    const status = document.getElementById('app-status');
+    if (!status) return;
+    const messageElement = status.querySelector('.app-status-message');
+    const retryButton = status.querySelector('.app-status-retry');
+    status.hidden = hidden;
+    status.classList.toggle('is-error', error);
+    if (messageElement) messageElement.textContent = message;
+    if (retryButton) retryButton.hidden = !retry;
+}
+
+function clearRenderedTimeline() {
+    track.querySelectorAll('.timeline-item, .century-line, .half-century-line, .decade-line, .single-year-line, .year-label')
+        .forEach(element => element.remove());
+    worldEventsTrack.replaceChildren();
+    culturalErasTrack.replaceChildren();
+    loadedItems = [];
+    loadedContexts = [];
+}
+
 // --- 1. FETCH JSON DATA ---
 async function loadData() {
+    setAppStatus('Loading timeline…');
     try {
         const response = await fetch('data.json');
+        if (!response.ok) throw new Error(`data.json returned HTTP ${response.status}`);
         const data = await response.json();
+        if (!Array.isArray(data.items)) throw new Error('data.json must contain an items array');
+        if (data.contexts !== undefined && !Array.isArray(data.contexts)) {
+            throw new Error('data.json contexts must be an array when provided');
+        }
         
         // Sort by year first. If same year, high priority (1) goes first.
-        loadedItems = data.items.sort((a, b) => {
+        const nextItems = [...data.items].sort((a, b) => {
             if (a.year === b.year) return (a.priority || 2) - (b.priority || 2);
             return a.year - b.year;
         });
+        const nextContexts = data.contexts ? [...data.contexts] : [];
+        clearRenderedTimeline();
+        loadedItems = nextItems;
         
         renderGridLines();
         renderItems(loadedItems); 
         
         // NEW: Render the semantic context timelines if they exist
-        if (data.contexts) renderContexts(data.contexts); 
+        if (nextContexts.length) renderContexts(nextContexts);
+
+        setAppStatus('', { hidden: true });
 
     } catch (error) {
         console.error("Error loading data.json", error);
+        setAppStatus('Timeline could not load.', { error: true, retry: true });
     }
 }
 
-// --- 2. DRAW TIMELINE GRID (Centuries & Decades Only) ---
+document.querySelector('.app-status-retry')?.addEventListener('click', loadData);
+
+// --- 2. DRAW TIMELINE GRID ---
 function renderGridLines() {
     for (let year = minYear; year <= maxYear; year++) {
-        
-        // THE QUICK DISABLE: If the year doesn't end in 0, skip it entirely!
-        // This stops thousands of DOM elements from being created.
-        if (year % 10 !== 0) continue; 
-        
         const xPos = (year - minYear) * pixelsPerYear;
         
         // Draw the line
@@ -226,14 +277,40 @@ function renderGridLines() {
         if (year % 100 === 0) {
             line.className = 'century-line';
             label.style.fontWeight = '700'; 
-        } else {
+        } else if (year % 50 === 0) {
+            line.className = 'half-century-line';
+            label.style.fontWeight = '400';
+        } else if (year % 10 === 0) {
             line.className = 'decade-line';
+            label.className = 'year-label decade-year-label';
+        } else {
+            line.className = 'single-year-line';
+            label.className = 'year-label single-year-label';
         }
         
         track.appendChild(line);
         track.appendChild(label);
     }
 }
+function buildTimelineMedia(item) {
+    if (!item.image) {
+        return `
+            <div class="item-media is-image-missing">
+                <div class="item-image item-image-placeholder" role="img" aria-label="No image available">
+                    <span>No image</span>
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="item-media is-image-loading">
+            <div class="item-image-status" aria-hidden="true">Loading</div>
+            <img data-src="${item.image}" class="item-image" alt="${item.title}" loading="lazy" decoding="async" onload="handleImageLoad(this)" onerror="handleImageError(this)">
+        </div>
+    `;
+}
+
 // --- 3. RENDER ITEMS ---
 function renderItems(items) {
     track.style.width = `${(maxYear - minYear) * pixelsPerYear}px`;
@@ -245,20 +322,13 @@ function renderItems(items) {
         
         item.baseX = xPos;
         item.priority = item.priority || 2; 
+        el.classList.add(item.priority === 1 ? 'priority-major' : 'priority-standard');
         el.style.left = `${xPos}px`;
         el.style.top = `0px`; 
         
-      // 1. Build the image layer
-      // 1. Build the image layer
-      let html = '';
-      if (item.image) {
-          const fallbackSVG = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTI1Ij48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEyNSIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzdhN2E3YSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+";
-          
-          // THE FIX: Added onload handler so it snaps to the correct lane the moment it downloads
-          // THE FIX: Now routes through our smart-sizing function on download
-          html += `<img data-src="${item.image}" class="item-image" alt="${item.title}" loading="lazy" decoding="async" onload="handleImageLoad(this)" onerror="this.onerror=null; this.src='${fallbackSVG}';">`;
-          el.style.backgroundColor = 'transparent'; 
-      }
+      // 1. Build the image, loading or missing-image layer.
+      let html = buildTimelineMedia(item);
+      if (item.image) el.style.backgroundColor = 'transparent';
 
         // 2. Build the info layer
         const hasDrawer = item.description || item.link || item.attribution;
@@ -305,6 +375,8 @@ function renderItems(items) {
         `;
         
         el.innerHTML = html;
+        el.timelineItem = item;
+        item.imageReady = !item.image;
         item.imageElement = el.querySelector('.item-image');
         
       // 3. Smart Click Logic (Aspect-Ratio Morph)
@@ -404,8 +476,8 @@ function renderItems(items) {
             });
         }
 
-        // Hide original card on timeline
-        el.style.opacity = '0';
+        // Hide the timeline source without overriding its LOD opacity.
+        el.classList.add('is-mobile-source-hidden');
 
         // 4. Force reflow to lock starting coordinates
         clone.offsetHeight; 
@@ -438,7 +510,7 @@ function renderItems(items) {
             // Reveal the original halfway through the CSS-controlled return flight,
             // then remove the clone when that transition finishes.
             setTimeout(() => {
-                el.style.opacity = '1';
+                el.classList.remove('is-mobile-source-hidden');
                 clone.style.opacity = '0';
             }, cloneTransitionMs / 2);
             
@@ -474,6 +546,16 @@ function renderItems(items) {
 
     rebuildStackingLayout();
     updateTransform();
+}
+
+function buildContextMedia(item) {
+    if (!item.image) return '';
+    return `
+        <div class="item-media context-media is-image-loading">
+            <div class="item-image-status" aria-hidden="true">Loading</div>
+            <img data-src="${item.image}" class="card-image" alt="${item.title}" loading="lazy" decoding="async" onload="handleContextImageLoad(this)" onerror="handleContextImageError(this)">
+        </div>
+    `;
 }
 
 // --- RENDER CONTEXTS (Handles both Spans and Single Points) ---
@@ -528,9 +610,7 @@ function renderContexts(contexts) {
         // 2. Format Date Text (Single year vs Range)
         const dateText = isPointEvent ? `${startYear}` : `${startYear} - ${endYear}`;
 
-        const imgHTML = item.image
-            ? `<img data-src="${item.image}" class="card-image" alt="${item.title}" loading="lazy" decoding="async">`
-            : '';
+        const imgHTML = buildContextMedia(item);
 
         // THE FIX: We build the 'X' and Wikipedia link directly into the card HTML here!
         const descHTML = (item.description || item.image || item.link) 
@@ -700,6 +780,22 @@ function scheduleStackingLayoutRebuild() {
     });
 }
 
+function scheduleImageSettlement(item) {
+    pendingImageSettlements.add(item);
+    if (imageSettlementQueued) return;
+    imageSettlementQueued = true;
+    requestAnimationFrame(() => {
+        imageSettlementQueued = false;
+        pendingImageSettlements.forEach(pendingItem => {
+            pendingItem.imageReady = true;
+        });
+        pendingImageSettlements.clear();
+        rebuildStackingLayout();
+        updateLevelOfDetail();
+        updateVerticalStacking();
+    });
+}
+
 function updateVerticalStacking() {
     if (!loadedItems.length) return;
 
@@ -708,7 +804,7 @@ function updateVerticalStacking() {
     const verticalFade = Math.max(0, Math.min(1, 1 - (scale - stackFadeStart) / stackFadeRange));
 
     loadedItems.forEach(item => {
-        if (item.isCulled) return;
+        if (item.isCulled || item.isLodHidden) return;
         item.priorityScale = item.isMajorMilestone ? 1 + (priorityBoost * priorityBoostFactor) : 1;
         let yOffset = item.laneOffset * dynamicVerticalStep * verticalFade;
 
@@ -743,6 +839,30 @@ function setCulledState(item, isCulled) {
     item.element.classList?.toggle('is-culled', isCulled);
 }
 
+function getLodProgress(startScale, fullScale) {
+    return Math.max(0, Math.min(1, (scale - startScale) / (fullScale - startScale)));
+}
+
+function updateLevelOfDetail() {
+    const decadeOpacity = getLodProgress(decadeFadeStartScale, decadeFullScale);
+    const annualLineOpacity = getLodProgress(annualLineFadeStartScale, annualLineFullScale);
+    const annualLabelOpacity = getLodProgress(annualLabelFadeStartScale, annualLabelFullScale);
+
+    track.style.setProperty('--decade-grid-opacity', decadeOpacity);
+    track.style.setProperty('--decade-label-opacity', decadeOpacity);
+    track.style.setProperty('--annual-grid-opacity', annualLineOpacity);
+    track.style.setProperty('--annual-label-opacity', annualLabelOpacity);
+
+    loadedItems.forEach(item => {
+        const isStandardItem = Number(item.priority) !== 1;
+        const isWaitingForImage = Boolean(item.image) && !item.imageReady;
+        const isLodHidden = isStandardItem && (scale < standardItemRevealScale || isWaitingForImage);
+        if (item.isLodHidden === isLodHidden) return;
+        item.isLodHidden = isLodHidden;
+        item.element.classList.toggle('is-lod-hidden', isLodHidden);
+    });
+}
+
 function updateViewportCulling() {
     const visibleBounds = getViewportWorldBounds(viewportBufferRatio);
     const imageBounds = getViewportWorldBounds(imageLoadBufferRatio);
@@ -751,7 +871,8 @@ function updateViewportCulling() {
         const isVisible = item.baseX >= visibleBounds.left && item.baseX <= visibleBounds.right;
         setCulledState(item, !isVisible);
 
-        if (item.baseX >= imageBounds.left && item.baseX <= imageBounds.right) {
+        const canPreloadImage = Number(item.priority) === 1 || scale >= standardItemPreloadScale;
+        if (canPreloadImage && item.baseX >= imageBounds.left && item.baseX <= imageBounds.right) {
             loadDeferredImage(item.imageElement);
         }
     });
@@ -776,6 +897,7 @@ function updateTransform() {
     track.style.setProperty('--item-zoom', 1 + (scale - minZoomScale) * itemZoomMultiplier);
     // THE FIX: Changed / 0.2 to / 0.1 so it ramps up to full opacity twice as fast
     track.style.setProperty('--detail-opacity', Math.max(0, Math.min(1, (scale - opacityStartScale) / opacityFadeRange)));
+    updateLevelOfDetail();
     updateViewportCulling();
     updateVerticalStacking();
 }
@@ -1031,19 +1153,62 @@ function renderLoop() {
         // Change it in both functions to this:
         track.style.setProperty('--item-zoom', 1 + (scale - minZoomScale) * itemZoomMultiplier);
 
+        updateLevelOfDetail();
         updateViewportCulling();
         updateVerticalStacking();
     } else {
         track.classList.remove('is-moving');
         scale = targetScale;
         translateX = targetTranslateX;
+        updateTransform();
     }
     
     requestAnimationFrame(renderLoop);
 }
 
 // --- 9. SMART IMAGE SIZING ---
-window.handleImageLoad = function(img) {
+function setImageMediaState(img, state) {
+    const media = img.closest('.item-media');
+    const status = media?.querySelector('.item-image-status');
+    media?.classList.remove('is-image-loading');
+    media?.classList.add(`is-image-${state}`);
+
+    if (state === 'error') {
+        img.hidden = true;
+    }
+
+    if (state === 'error' && status) {
+        status.textContent = 'Image unavailable';
+        status.removeAttribute('aria-hidden');
+        status.setAttribute('role', 'img');
+        status.setAttribute('aria-label', `${img.alt || 'Timeline item'}: image unavailable`);
+    }
+}
+
+window.handleContextImageLoad = function(img) {
+    setImageMediaState(img, 'loaded');
+};
+
+window.handleContextImageError = function(img) {
+    setImageMediaState(img, 'error');
+};
+
+window.handleImageError = function(img) {
+    setImageMediaState(img, 'error');
+
+    const item = img.closest('.timeline-item')?.timelineItem;
+    if (!item) return;
+    item.imageElement = null;
+    scheduleImageSettlement(item);
+};
+
+window.handleImageLoad = async function(img) {
+    try {
+        await img.decode();
+    } catch {
+        // The load event still confirms a drawable fallback if decode is unsupported or rejects.
+    }
+
     const aspect = img.naturalWidth / img.naturalHeight;
     
     // The target: Image width should never be less than 70% of its base height
@@ -1054,9 +1219,12 @@ window.handleImageLoad = function(img) {
         const boost = minAspect / aspect;
         img.closest('.timeline-item').style.setProperty('--aspect-boost', boost);
     }
+
+    setImageMediaState(img, 'loaded');
     
-    // Re-measure lane geometry after loaded images settle, batching same-frame loads.
-    scheduleStackingLayoutRebuild();
+    // Re-measure while the first-load card is still hidden, then position and reveal it in one frame.
+    const item = img.closest('.timeline-item')?.timelineItem;
+    if (item) scheduleImageSettlement(item);
 };
 
 renderLoop();

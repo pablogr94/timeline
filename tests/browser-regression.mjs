@@ -44,6 +44,27 @@ async function runDesktop(connection) {
     await connection.send('Emulation.setTouchEmulationEnabled', { enabled: false });
     await navigateForTest(connection);
 
+    const decadeGrid = await evaluate(connection, `(() => {
+        const lines = document.querySelectorAll('.decade-line');
+        const halfCenturyLines = document.querySelectorAll('.half-century-line');
+        return { count: lines.length, halfCenturyCount: halfCenturyLines.length, height: lines[0].getBoundingClientRect().height };
+    })()`);
+    assert.equal(decadeGrid.count, 24, '10-year detail lines should remain rendered for LOD');
+    assert.equal(decadeGrid.halfCenturyCount, 3, '50-year overview lines should always be rendered');
+    assert.ok(decadeGrid.height >= 1600, 'decade grid lines should cross the full desktop viewport');
+
+    const mediaStates = await evaluate(connection, `(() => {
+        const placeholders = [...document.querySelectorAll('.timeline-item .is-image-missing')];
+        return {
+            appStatusHidden: document.getElementById('app-status').hidden,
+            missingCount: placeholders.length,
+            minimumWidth: Math.min(...placeholders.map(element => element.getBoundingClientRect().width)),
+        };
+    })()`);
+    assert.equal(mediaStates.appStatusHidden, true, 'loading status should hide after data renders');
+    assert.equal(mediaStates.missingCount, 5, 'all five image-less records should render placeholders');
+    assert.ok(mediaStates.minimumWidth >= 79, 'image-less records should retain a usable card width');
+
     const initialTransform = await evaluate(connection, `document.getElementById('track').style.transform`);
     await connection.send('Input.dispatchMouseEvent', {
         type: 'mouseWheel',

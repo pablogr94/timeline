@@ -7,13 +7,17 @@
 
     --canvas-color: #b0b0b0;
     --center-line-color: rgba(0, 0, 0, 0.4);
-    --century-grid-color: rgba(0, 0, 0, 0.3);
-    --decade-grid-color: rgba(0, 0, 0, 0.1);
+    --century-grid-color: rgba(0, 0, 0, 0.20);
+    --half-century-grid-color: rgba(0, 0, 0, 0.14);
+    --decade-grid-color: rgba(0, 0, 0, 0.16);
     --annual-grid-color: rgba(0, 0, 0, 0.15);
     --year-label-color: #ffffff;
 
     --item-surface-color: #2a2a2a;
     --item-text-color: #ffffff;
+    --image-placeholder-width: 80px;
+    --image-placeholder-color: #333333;
+    --image-placeholder-text-color: #858585;
     --description-surface-color: #0e0e0e;
     --description-text-color: rgb(225, 225, 225);
 
@@ -28,6 +32,8 @@
     --motion-card-position: 0.85s;
     --motion-card-expand: 0.4s;
     --motion-fast: 0.2s;
+    --motion-lod-enter: 0.4s;
+    --motion-lod-exit: 0.2s;
 }
 
 /* Mobile size */
@@ -82,6 +88,52 @@ body, html {
     cursor: grabbing;
 }
 
+.app-status {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.app-status[hidden] {
+    display: none;
+}
+
+.app-status-panel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background-color: var(--item-surface-color);
+    color: var(--item-text-color);
+    font-family: '42dot Sans', sans-serif;
+    font-size: 0.7rem;
+}
+
+.app-status.is-error .app-status-panel {
+    pointer-events: auto;
+}
+
+.app-status-retry {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 0;
+    padding: 5px 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.app-status-retry:hover,
+.app-status-retry:focus-visible {
+    border-color: #ffffff;
+    outline: none;
+}
+
 #track {
     position: absolute;
     top: 50%; 
@@ -105,45 +157,61 @@ body, html {
 
 .century-line {
     position: absolute;
-    top: -100vh; 
-    height: 200vh; 
+    top: calc(-100vh * var(--inv-scale, 1));
+    height: calc(200vh * var(--inv-scale, 1));
     width: 0;
-    border-left: 1px dashed var(--century-grid-color);
+    border-left: 1px solid var(--century-grid-color);
     z-index: 1;
     pointer-events: none;
     
-    /* THE FIX: scaleX keeps the width thin but leaves the height dynamic! */
+    /* Counter-scale the border width; top/height above counter-scale the parent camera. */
     transform: scaleX(var(--inv-scale, 1)); 
+}
+
+.half-century-line {
+    position: absolute;
+    top: calc(-100vh * var(--inv-scale, 1));
+    height: calc(200vh * var(--inv-scale, 1));
+    width: 0;
+    border-left: 1px solid var(--half-century-grid-color);
+    z-index: 1;
+    pointer-events: none;
+    transform: scaleX(var(--inv-scale, 1));
 }
 
 .decade-line {
     position: absolute;
-    top: -100vh; 
-    height: 200vh; 
+    top: calc(-100vh * var(--inv-scale, 1));
+    height: calc(200vh * var(--inv-scale, 1));
     width: 0;
     border-left: 1px dashed var(--decade-grid-color);
     z-index: 0; 
     pointer-events: none;
-    transform: scaleX(var(--inv-scale, 1)); 
+    transform: scaleX(var(--inv-scale, 1));
+    opacity: var(--decade-grid-opacity, 0);
 }
 
 /* --- NEW: Single Year Grid Lines --- */
 .single-year-line {
     position: absolute;
-    top: -100vh; 
-    height: 200vh; 
+    top: calc(-100vh * var(--inv-scale, 1));
+    height: calc(200vh * var(--inv-scale, 1));
     width: 0;
     border-left: 1px dotted var(--annual-grid-color);
     z-index: 0; 
     pointer-events: none;
     transform: scaleX(var(--inv-scale, 1)); 
-    opacity: var(--detail-opacity, 0);
+    opacity: var(--annual-grid-opacity, 0);
 }
 
 /* Make single year numbers softer than decades */
 .single-year-label {
-    opacity: var(--detail-opacity, 0);
+    opacity: var(--annual-label-opacity, 0);
     color: rgba(255, 255, 255, 0.7); /* Semi-transparent white to stay subtle */
+}
+
+.decade-year-label {
+    opacity: var(--decade-label-opacity, 0);
 }
 
 /* 1. Base card */
@@ -167,11 +235,29 @@ body, html {
          Now, when they un-stack, they look like they are floating and settling 
          deliberately like physical objects! */
     transition: scale var(--motion-hover-scale) cubic-bezier(0.22, 1, 0.36, 1),
+                opacity var(--lod-opacity-duration, var(--motion-fast)) ease-out,
                 top var(--motion-card-position) cubic-bezier(0.19, 1, 0.22, 1),
                 left var(--motion-card-position) cubic-bezier(0.19, 1, 0.22, 1);
     
     will-change: transform, scale, top, left;
     backface-visibility: hidden;
+}
+
+.timeline-item.priority-standard {
+    --lod-opacity-duration: var(--motion-lod-enter);
+    opacity: 1;
+}
+
+.timeline-item.is-lod-hidden {
+    --lod-opacity-duration: var(--motion-lod-exit);
+    opacity: 0;
+    pointer-events: none;
+    will-change: auto;
+}
+
+.timeline-item.is-mobile-source-hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .is-culled {
@@ -265,14 +351,76 @@ body, html {
 }
 
 
-/* 3. Base Image - Clean, Full Color, 100% Opacity */
+/* 3. Media states */
+.item-media {
+    position: relative;
+    min-width: var(--image-placeholder-width);
+    height: calc(var(--base-item-height) * var(--aspect-boost, 1));
+    overflow: hidden;
+    background-color: var(--image-placeholder-color);
+}
+
+.item-image-status,
+.item-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--image-placeholder-width);
+    height: 100%;
+    box-sizing: border-box;
+    color: var(--image-placeholder-text-color);
+    font-family: '42dot Sans', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.item-image-status {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.item-media.is-image-loaded .item-image-status {
+    display: none;
+}
+
+.item-image-placeholder {
+    background:
+        linear-gradient(135deg, transparent 49.5%, rgba(255, 255, 255, 0.08) 50%, transparent 50.5%),
+        var(--image-placeholder-color);
+}
+
+.context-media {
+    width: calc(100% + (2 * var(--context-card-padding-x)));
+    min-width: 0;
+    min-height: 100px;
+    height: auto;
+    margin-top: calc(-1 * var(--context-card-padding-y));
+    margin-left: calc(-1 * var(--context-card-padding-x));
+    margin-right: calc(-1 * var(--context-card-padding-x));
+    margin-bottom: 10px;
+}
+
+.context-media .item-image-status {
+    width: 100%;
+}
+
+.context-media .card-image {
+    width: 100%;
+    margin: 0;
+}
+
+/* Base Image - Clean, Full Color, 100% Opacity */
 .item-image {
     height: calc(var(--base-item-height) * var(--aspect-boost, 1));
     width: auto;             
+    min-width: var(--image-placeholder-width);
     display: block;          
     object-fit: cover; 
-    
-    /* Grayscale and opacity have been removed! */
+    position: relative;
+    z-index: 1;
 }
 
 

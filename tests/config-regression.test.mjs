@@ -17,7 +17,9 @@ function loadTimelineRuntime() {
             add() {},
             contains() { return false; },
             remove() {},
+            toggle() {},
         },
+        querySelector() { return null; },
         style: createStyle(),
     };
 
@@ -28,6 +30,7 @@ function loadTimelineRuntime() {
             createElement() { return { ...element, style: createStyle() }; },
             documentElement: { style: createStyle() },
             getElementById() { return element; },
+            querySelector() { return null; },
             querySelectorAll() { return []; },
         },
         fetch() { return new Promise(() => {}); },
