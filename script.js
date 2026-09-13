@@ -93,6 +93,8 @@ const TIMELINE_CONFIG = deepFreeze({
     image: {
         minAspectRatio: 0.70,
         maxConcurrentLoads: 3,
+        overviewPreloadLimit: 12,
+        overviewPreloadDelayMs: 250,
     },
     culling: {
         viewportBufferRatio: 0.5,
@@ -162,7 +164,12 @@ const {
     velocitySmoothingPrevious,
     velocitySmoothingCurrent,
 } = TIMELINE_CONFIG.touch;
-const { minAspectRatio, maxConcurrentLoads } = TIMELINE_CONFIG.image;
+const {
+    minAspectRatio,
+    maxConcurrentLoads,
+    overviewPreloadLimit,
+    overviewPreloadDelayMs,
+} = TIMELINE_CONFIG.image;
 const { viewportBufferRatio, imageLoadBufferRatio } = TIMELINE_CONFIG.culling;
 
 function getCssTimeMs(customProperty) {
@@ -257,6 +264,7 @@ async function loadData() {
         if (nextContexts.length) renderContexts(nextContexts);
 
         setAppStatus('', { hidden: true });
+        scheduleOverviewImagePreload();
 
     } catch (error) {
         console.error("Error loading data.json", error);
@@ -828,16 +836,35 @@ function getViewportWorldBounds(bufferRatio) {
     };
 }
 
-function loadDeferredImage(imageElement) {
+function loadDeferredImage(imageElement, priority = 1) {
     if (!imageElement || imageElement.hasAttribute('src') || !imageElement.dataset.src || imageElement.dataset.loadState) return;
     imageElement.dataset.loadState = 'queued';
-    deferredImageQueue.push(imageElement);
+    deferredImageQueue.push({ imageElement, priority });
+    deferredImageQueue.sort((a, b) => b.priority - a.priority);
     pumpDeferredImageQueue();
+}
+
+function preloadOverviewImages() {
+    loadedItems
+        .filter(item => Number(item.priority) !== 1 && item.image && item.imageElement)
+        .sort((a, b) => Math.abs(a.year - targetYear) - Math.abs(b.year - targetYear))
+        .slice(0, overviewPreloadLimit)
+        .forEach(item => loadDeferredImage(item.imageElement, 1));
+}
+
+function scheduleOverviewImagePreload() {
+    setTimeout(() => {
+        if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(preloadOverviewImages, { timeout: 1000 });
+        } else {
+            preloadOverviewImages();
+        }
+    }, overviewPreloadDelayMs);
 }
 
 function pumpDeferredImageQueue() {
     while (activeImageLoads < maxConcurrentLoads && deferredImageQueue.length) {
-        const imageElement = deferredImageQueue.shift();
+        const { imageElement } = deferredImageQueue.shift();
         if (imageElement.isConnected === false || imageElement.hasAttribute('src')) continue;
         imageElement.dataset.loadState = 'active';
         activeImageLoads++;
@@ -907,7 +934,7 @@ function updateViewportCulling() {
 
         const canPreloadImage = Number(item.priority) === 1 || scale >= standardItemPreloadScale;
         if (canPreloadImage && item.baseX >= imageBounds.left && item.baseX <= imageBounds.right) {
-            loadDeferredImage(item.imageElement);
+            loadDeferredImage(item.imageElement, Number(item.priority) === 1 ? 2 : 1);
         }
     });
 
@@ -916,7 +943,7 @@ function updateViewportCulling() {
         setCulledState(item, !isVisible);
 
         if (item.baseEndX >= imageBounds.left && item.baseStartX <= imageBounds.right) {
-            loadDeferredImage(item.imageElement);
+            loadDeferredImage(item.imageElement, 0);
         }
     });
 }

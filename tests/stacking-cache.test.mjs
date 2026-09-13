@@ -260,6 +260,35 @@ test('deferred image loading caps concurrent requests and advances the queue on 
     assert.equal(images[3].src, 'image-3.jpg');
 });
 
+test('overview preload quietly queues only the nearest standard-card images', () => {
+    const context = loadRuntime();
+    const items = Array.from({ length: 14 }, (_, index) => {
+        const imageElement = {
+            dataset: { src: `image-${index}.jpg` },
+            hasAttribute(name) {
+                return name === 'src' && Boolean(this.src);
+            },
+        };
+        return {
+            year: 1800 + (index * 20),
+            priority: 2,
+            image: `image-${index}.jpg`,
+            imageElement,
+        };
+    });
+    context.testItems = items;
+
+    vm.runInContext('loadedItems = testItems; preloadOverviewImages()', context);
+
+    assert.equal(items.filter(item => item.imageElement.dataset.loadState).length, 12);
+    assert.equal(items.filter(item => item.imageElement.src).length, 3);
+    assert.equal(items[0].imageElement.dataset.loadState, undefined);
+    assert.equal(items[1].imageElement.dataset.loadState, undefined);
+
+    const script = fs.readFileSync(new URL('../script.js', import.meta.url), 'utf8');
+    assert.doesNotMatch(script, /Preparing details/);
+});
+
 test('image-less timeline items render a deliberate fixed-width placeholder', () => {
     const context = loadRuntime();
     context.testItem = { title: 'Nakagin Capsule Tower', image: '' };

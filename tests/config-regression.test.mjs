@@ -93,6 +93,8 @@ test('central JavaScript config preserves and connects the current behavior valu
     assert.equal(config.camera.baseGlideSpeed, 0.4);
     assert.equal(config.detail.itemZoomMultiplier, 1.5);
     assert.equal(config.image.maxConcurrentLoads, 3);
+    assert.equal(config.image.overviewPreloadLimit, 12);
+    assert.equal(config.image.overviewPreloadDelayMs, 250);
     assert.equal(config.touch.friction, 0.95);
     assert.ok(isDeeplyFrozen(config), 'the inspection config should not imply live runtime editing');
     const descriptor = Object.getOwnPropertyDescriptor(window, 'TIMELINE_CONFIG');

@@ -69,17 +69,24 @@ async function runDesktop(connection) {
         assert.notEqual(layer.backgroundImage, 'none', `${layer.id} should render its line pattern`);
     });
 
+    await wait(1000);
     const mediaStates = await evaluate(connection, `(() => {
         const placeholders = [...document.querySelectorAll('.timeline-item .is-image-missing')];
+        const standardImages = [...document.querySelectorAll('.timeline-item.priority-standard img')];
         return {
             appStatusHidden: document.getElementById('app-status').hidden,
+            appStatusMessage: document.querySelector('.app-status-message').textContent,
             missingCount: placeholders.length,
             minimumWidth: Math.min(...placeholders.map(element => element.getBoundingClientRect().width)),
+            queuedStandardImages: standardImages.filter(image => image.dataset.loadState).length,
+            standardImageCount: standardImages.length,
         };
     })()`);
     assert.equal(mediaStates.appStatusHidden, true, 'loading status should hide after data renders');
+    assert.notEqual(mediaStates.appStatusMessage, 'Preparing details…', 'background preload should not show a status message');
     assert.equal(mediaStates.missingCount, 5, 'all five image-less records should render placeholders');
     assert.ok(mediaStates.minimumWidth >= 79, 'image-less records should retain a usable card width');
+    assert.equal(mediaStates.queuedStandardImages, mediaStates.standardImageCount, 'standard-card images should preload during overview idle time');
 
     const initialTransform = await evaluate(connection, `document.getElementById('track').style.transform`);
     await connection.send('Input.dispatchMouseEvent', {
