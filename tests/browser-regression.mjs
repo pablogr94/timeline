@@ -106,6 +106,42 @@ async function runDesktop(connection) {
     await wait(100);
     const dragTransform = await evaluate(connection, `document.getElementById('track').style.transform`);
     assert.notEqual(dragTransform, zoomTransform, 'desktop drag should pan the timeline');
+
+    const mediaBackground = await evaluate(connection, `(() => {
+        const media = document.createElement('div');
+        media.className = 'item-media is-image-loaded';
+        document.body.appendChild(media);
+        const loaded = getComputedStyle(media).backgroundColor;
+        media.className = 'item-media is-image-error';
+        const failed = getComputedStyle(media).backgroundColor;
+        media.remove();
+        return { loaded, failed };
+    })()`);
+    assert.equal(mediaBackground.loaded, 'rgba(0, 0, 0, 0)', 'loaded imagery should not retain the dark loading surface');
+    assert.equal(mediaBackground.failed, 'rgb(51, 51, 51)', 'failed imagery should preserve its fallback surface');
+
+    const bounce = await evaluate(connection, `(async () => {
+        targetScale = scale = 0.08;
+        targetTranslateX = translateX = window.innerWidth / 2 - (1950 - minYear) * pixelsPerYear * scale;
+        updateTransform();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const item = loadedItems.find(record => record.laneOffset !== 0 && !record.isCulled && !record.isLodHidden);
+        if (!item) throw new Error('No stacked card available for wheel regression');
+        let maxDeviation = 0;
+        for (const deltaY of [-120, 120]) {
+            viewport.dispatchEvent(new WheelEvent('wheel', { deltaY, clientX: 1200, bubbles: true, cancelable: true }));
+            for (let frame = 0; frame < 50; frame++) {
+                await new Promise(requestAnimationFrame);
+                const box = item.element.getBoundingClientRect();
+                const yOffset = parseFloat(item.element.style.top.match(/calc\\(([-\\d.]+)/)[1]);
+                const expected = window.innerHeight / 2 + yOffset;
+                maxDeviation = Math.max(maxDeviation, Math.abs(box.y + box.height / 2 - expected));
+            }
+        }
+        return { title: item.title, maxDeviation };
+    })()`);
+    assert.ok(bounce.maxDeviation < 0.1, `wheel zoom should not displace a card from its lane: ${JSON.stringify(bounce)}`);
+    console.log('Desktop wheel lane deviation:', bounce.maxDeviation);
 }
 
 async function runMobile(connection) {

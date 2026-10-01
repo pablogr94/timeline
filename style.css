@@ -226,14 +226,11 @@ body, html {
     transform: scale(calc(var(--inv-scale, 1) * var(--priority-scale, 1) * var(--item-zoom, 1)));
     scale: 1;
     
-    /* THE INTENTIONAL CHOREOGRAPHY:
-       - 'scale' stays at 0.4s for a snappy, responsive mouse hover.
-       - 'top' and 'left' are extended to 0.85s with a highly fluid easing curve.
-         Now, when they un-stack, they look like they are floating and settling 
-         deliberately like physical objects! */
+    /* Hover and horizontal layout retain their choreography.
+       Vertical position already follows the interpolated camera: animating
+       'top' again delays inverse-scale compensation and causes wheel bounce. */
     transition: scale var(--motion-hover-scale) cubic-bezier(0.22, 1, 0.36, 1),
                 opacity var(--lod-opacity-duration, var(--motion-fast)) ease-out,
-                top var(--motion-card-position) cubic-bezier(0.19, 1, 0.22, 1),
                 left var(--motion-card-position) cubic-bezier(0.19, 1, 0.22, 1);
     
     will-change: transform, scale, top, left;
@@ -381,6 +378,10 @@ body, html {
 
 .item-media.is-image-loaded .item-image-status {
     display: none;
+}
+
+.item-media.is-image-loaded {
+    background-color: transparent;
 }
 
 .item-image-placeholder {
