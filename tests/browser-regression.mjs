@@ -15,12 +15,12 @@ async function waitForApp(connection) {
     const deadline = Date.now() + 15000;
     while (Date.now() < deadline) {
         const ready = await evaluate(connection, `document.readyState === 'complete'
-            && document.querySelectorAll('.timeline-item').length === 26
+            && document.querySelectorAll('.timeline-item').length === 65
             && document.querySelectorAll('.context-item').length === 10`);
         if (ready) return;
         await wait(50);
     }
-    throw new Error('Timeline did not render the expected 26 items and 10 contexts');
+    throw new Error('Timeline did not render the expected 65 items and 10 contexts');
 }
 
 async function navigateForTest(connection) {
@@ -77,16 +77,23 @@ async function runDesktop(connection) {
             appStatusHidden: document.getElementById('app-status').hidden,
             appStatusMessage: document.querySelector('.app-status-message').textContent,
             missingCount: placeholders.length,
-            minimumWidth: Math.min(...placeholders.map(element => element.getBoundingClientRect().width)),
+            minimumWidth: placeholders.length
+                ? Math.min(...placeholders.map(element => element.getBoundingClientRect().width))
+                : 0,
             queuedStandardImages: standardImages.filter(image => image.dataset.loadState).length,
             standardImageCount: standardImages.length,
+            overviewPreloadLimit: window.TIMELINE_CONFIG.image.overviewPreloadLimit,
         };
     })()`);
     assert.equal(mediaStates.appStatusHidden, true, 'loading status should hide after data renders');
     assert.notEqual(mediaStates.appStatusMessage, 'Preparing details…', 'background preload should not show a status message');
-    assert.equal(mediaStates.missingCount, 5, 'all five image-less records should render placeholders');
-    assert.ok(mediaStates.minimumWidth >= 79, 'image-less records should retain a usable card width');
-    assert.equal(mediaStates.queuedStandardImages, mediaStates.standardImageCount, 'standard-card images should preload during overview idle time');
+    assert.equal(mediaStates.missingCount, 0, 'the integrated catalog should not contain missing work images');
+    assert.equal(mediaStates.minimumWidth, 0, 'the complete catalog should not need placeholder geometry');
+    assert.equal(
+        mediaStates.queuedStandardImages,
+        Math.min(mediaStates.standardImageCount, mediaStates.overviewPreloadLimit),
+        'overview preload should remain bounded as the catalog grows',
+    );
 
     const initialTransform = await evaluate(connection, `document.getElementById('track').style.transform`);
     await connection.send('Input.dispatchMouseEvent', {
